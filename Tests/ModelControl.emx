@@ -6,8 +6,8 @@
    <Version>4.1</Version>
 <IsMainModel>0</IsMainModel>
  <KeepParameterValues>False</KeepParameterValues>
-   <LibraryPath>Z:\Users\yury\workspaces\Ubuntu_shared\ut_git\20SimModels\Tests\gravity_test_vA.emx</LibraryPath>
-  <TimeStamp>2011-10-12 16:47:30</TimeStamp>
+   <LibraryPath>Z:\Users\yury\workspaces\Ubuntu_shared\ut_git\20SimModels\Tests\ModelControl.emx</LibraryPath>
+  <TimeStamp>2011-10-14 17:05:00</TimeStamp>
 </Description>';
  type Mainmodel
  end;
@@ -150,17 +150,16 @@ R = [qw^2 + qx^2 - qy^2 - qz^2, 2*qx*qy - 2*qz*qw, 2*qx*qz + 2*qy*qw;
        end;
        implementation eq
 parameters
-	real c = 0.0;
+	real c[8] = [0.0;0;0;10;10;10;10;10];
 variables
- real x[3];
+	 real x[8];
+	real sub_state[3];
 equations
     //state = int(p.f);
-	x=int(p.f[1:3]);
-	p.e[1]=0;//state[1];
-	p.e[2]=0;//-state[2];
-	p.e[3]=0;//state[3];
-    p.e[4:8] = state[4:8] * c;
-implementation_end;
+	sub_state=int(p.f[1:3]);
+	x[1:3]=sub_state;
+	x[4:8]=state[4:8];
+	p.e=diag(c)*x;implementation_end;
       CalculateJ 384 136
        description '<Description>
    <Version>4.1</Version>
@@ -220,9 +219,9 @@ variables
 	real base_offset_H[4,4];
 
 	real q[8];
-	real T[6];
+/*	real T[6];
 	real tildeT[4,4];
-	real dotH[4,4];
+	real dotH[4,4];*/
 	real initialq[8];
 real Rz[3,3];
 /*
@@ -395,10 +394,10 @@ equations
 	end;
 
 	Wt[1:3] = 0;
-	Wt[4:6] = (state[1:3,4]/CtipControl);
+	Wt[4:6] = (state[1:3,4]*CtipControl);
 	stenght=sqrt(transpose(Wt)*Wt);
 	optimizationCriteria=int(transpose(state[1:3,4])*state[1:3,4]);
-	Wr[1:3] = theta*omega/(CtipControl*15);
+	Wr[1:3] = theta*omega*(CtipControl/15);
 	Wr[4:6] = 0;
 		
 	p.e = inverse(transpose(Adjoint(Hvp0)))*(Wt+Wr );
@@ -515,8 +514,8 @@ variables
 	real Rz[3,3];
 	real Ry[3,3];
 	real Rx[3,3];
-	real R[3,3];
-	real qw,qx,qy,qz;
+/*	real R[3,3];
+	real qw,qx,qy,qz;*/
 equations
 	Rz=[cos(xyzrpy[4]), -sin(xyzrpy[4]), 0; 
 		sin(xyzrpy[4]), cos(xyzrpy[4]), 	0;
@@ -3977,13 +3976,6 @@ implementation_end;
         end;
         connections
          Base\p => ZeroJunction\p;
-         Mux\port8 => Joint34\p1 744 240 928 240;
-         Mux\port9 => Joint45\p1 760 224 1088 224;
-         JointBase1\p2 <= Link1\p;
-         Joint12\p => Link1\p1;
-         Joint12\p2 <= Link2\p;
-         Joint23\p => Link2\p1;
-         Joint23\p2 <= Link3\p;
          Joint34\p => Link3\p1;
          Link4\p => Joint34\p2;
          Joint45\p => Link4\p1;
@@ -3994,14 +3986,14 @@ implementation_end;
          JointBase1\p => Base\p1;
          Wtip0\p => Link5\p1;
          Mux\port7 => Joint23\p1 728 256 768 256;
+         Mux\port8 => Joint34\p1 744 240 928 240;
+         Mux\port9 => Joint45\p1 760 224 1088 224;
+         JointBase1\p2 <= Link1\p;
+         Joint12\p => Link1\p1;
+         Joint12\p2 <= Link2\p;
+         Joint23\p => Link2\p1;
+         Joint23\p2 <= Link3\p;
          Hfloor0\output -> Base\Hin;
-         Link1\Hin <- JointBase1\Hout;
-         Joint45\Hout -> Link5\Hin;
-         Joint45\Hin <- Link4\Hout;
-         jointPos -> Submodel13\jointPos;
-         Submodel13\port1 -> JointBase1\angle;
-         Submodel13\port2 -> Joint12\angle;
-         Submodel13\port3 -> Joint23\angle;
          Submodel13\port4 -> Joint34\angle;
          Submodel13\port5 -> Joint45\angle;
          Joint34\Hout -> Link4\Hin;
@@ -4012,6 +4004,13 @@ implementation_end;
          Joint12\Hin <- Link1\Hout;
          Base\Hout -> JointBase1\Hin;
          Htip0\input <- Link5\Hout;
+         Link1\Hin <- JointBase1\Hout;
+         Joint45\Hout -> Link5\Hin;
+         Joint45\Hin <- Link4\Hout;
+         jointPos -> Submodel13\jointPos;
+         Submodel13\port1 -> JointBase1\angle;
+         Submodel13\port2 -> Joint12\angle;
+         Submodel13\port3 -> Joint23\angle;
         end;
         parameterrelations
 Base\m = Linkm[1];
@@ -4078,15 +4077,15 @@ parameterrelations_end;
        end;
        implementation eq
 parameters
- real forceMap[8]= [1.0;1.0;1.0;-1.0;-1.0;-1.0;-1.0;-1.0];
+ real forceMap[8]= [0;0;0;-1.0;-1.0;-1.0;-1.0;-1.0];
 
 variables
+
 	real K[8,8];
 	real ks[8];
 	real posdangerzones[8];
 	real negdangerzones[8];
 	real tempstate[8];
-	real initstate[8];
 code
   
 	tempstate = state;
@@ -4176,7 +4175,6 @@ code
 			ks[8] = 0;
 		end;
 	end;
-
 	K = diag(ks);
    p.e = diag(forceMap)*K*tempstate;
 implementation_end;
@@ -4324,8 +4322,6 @@ implementation_end;
      end;
      connections
       OneJunction\p => CtipControl\p;
-      EffortSensor1\p2 => DemuxHW1\control;
-      OneJunction\p => ControllableJ\tip;
       ControllableJ\joints => OneJunction2\p;
       C\p <= OneJunction2\p;
       OneJunction2\p => EffortSensor1\p1;
@@ -4335,9 +4331,9 @@ implementation_end;
       DemuxHW1\arm => bond_to_arm;
       OneJunction1\p => OneJunction2\p;
       GravityCompensation1\joints => OneJunction1\p;
+      EffortSensor1\p2 => DemuxHW1\control;
+      OneJunction\p => ControllableJ\tip;
       Splitter1\output -> CalculateJ\jointVelocities 560 136;
-      filter\y -> Gain\xyzrpy;
-      xyzypr -> filter\u;
       odometry_base -> MuxToControl1\base;
       Splitter1\output -> GravityCompensation1\jointPos 656 384;
       Gain\H -> CtipControl\Hvp0;
@@ -4347,6 +4343,8 @@ implementation_end;
       measured_angles_arm -> MuxToControl1\arm;
       Splitter1\output -> C\state;
       MuxToControl1\control -> Splitter1\input;
+      filter\y -> Gain\xyzrpy;
+      xyzypr -> filter\u;
      end;
     implementation_end;
    Mux2 616 328
@@ -4400,9 +4398,9 @@ output.e[1:3]=	input1.e;
       real InitialJointPos[5,1] = [-2.9496; -1.1345; 2.5482; -1.789; -2.9234];
       real InitialBasePos[4,4] = [1.0, 0.0, 0.0, 0.0; 0.0, 1.0, 0.0, 0.0; 0.0, 0.0, 1.0, 0.0; 0.0, 0.0, 0.0, 1.0];
       real LinkI[3,6] = [20.0, 1.0, 1.0, 1.0, 1.0, 1.0; 20.0, 1.0, 1.0, 1.0, 1.0, 1.0; 20.0, 1.0, 1.0, 1.0, 1.0, 1.0];
-      real LinkCOMdim[3,6] = [0.01489, 0.10453, 0.001, 0.011, 0.0, 0.0; 0.00213, 0.0017, 0.0967, 0.05103, 0.00115, 0.0; 0.00213, -0.00297, 0.02107, -0.02319, -0.01683, 0.001];
+      real LinkCOMdim[3,6] = [0.01489, 0.01489, 0.10453, 0.001, 0.011, 0.0; 0.00213, 0.00213, 0.0017, 0.0967, 0.05103, 0.00115; 0.00213, 0.00213, -0.00297, 0.02107, -0.02319, -0.01683];
       real Linkdim[3,6] = [0.024, 0.033, 0.0, 0.0, 0.0, 0.0; 0.0, 0.0, 0.0, 0.0, 0.0, 0.0; 0.096, 0.019, 0.155, 0.135, 0.096, 0.034];
-      real Linkm[6,1] = [2.412; 1.155; 0.934; 0.877; 0.251; 0.12];
+      real Linkm[6,1] = [20.0; 2.412; 1.155; 0.934; 0.877; 1.121];
       real MinEndstopPos[5,1] = [-2.95; -1.13; -2.64; -1.79; -2.92];
       real MaxEndstopPos[5,1] = [2.95; 1.57; 2.55; 1.79; 2.92];
       real Wheelpos[2,4] = [0.215, 0.215, -0.215, -0.215; -0.15, 0.15, -0.15, 0.15]; "[1:2,1] = LF, [1:2,2] = RF, [1:2,3] = LR, [1:2,4] = RR "
@@ -4434,7 +4432,7 @@ output.e[1:3]=	input1.e;
          signal out Hout [4,4];
         parameters
          real I[3,1] = [20.0; 20.0; 20.0];
-         real m = 2.412;
+         real m = 20.0;
          real COMdim[3,1] = [0.01489; 0.00213; 0.00213];
          real dim[3,1] = [0.024; 0.0; 0.096];
        end;
@@ -4607,7 +4605,7 @@ implementation_end;
             power in p1 [6,1];
            parameters
             real I[3,1] = [20.0; 20.0; 20.0];
-            real m = 2.412;
+            real m = 20.0;
           end;
           icon bg top
            figures
@@ -4653,7 +4651,7 @@ equations
            restrictions
             causality fixed out p;
            parameters
-            real m = 2.412;
+            real m = 20.0;
           end;
           icon bg bottom
            figures
@@ -4840,16 +4838,16 @@ implementation_end;
         end;
         connections
          AdHik\p2 => Ta0k\p;
-         Ta0k\p => EJS\p1;
-         p1 => AdHij\p2;
-         Ta00\p => AdHi0\p1;
-         Ta0k\p => InertialTensor\p;
          Ta0i\p <= AdHik1\p1;
          AdHi0\p2 => AdHik1\p2;
          Gravity\p => Ta00\p;
          Ta0i\p => AdHik\p1;
          p <= Ta0i\p;
          Ta0i\p <= AdHij\p1;
+         Ta0k\p => EJS\p1;
+         p1 => AdHij\p2;
+         Ta00\p => AdHi0\p1;
+         Ta0k\p => InertialTensor\p;
          Hin -> Splitter1\input;
          Hij\output -> Hout;
          Splitter1\output -> Hij\input;
@@ -6044,16 +6042,16 @@ implementation_end;
         end;
         connections
          p1 => ZeroJunction\p;
-         OneJunction\p => uTbai\p1;
-         Wbai\p <= AdHji\p1;
-         OneJunction\p <= EndstopMin\p2;
-         p2 => AdHji\p2;
          OneJunction\p <= EndstopMax\p2;
          OneJunction\p => Rjoint\p;
          uTbai\p2 => Tbai\p;
          Tbai\p => Wbai\p;
          p <= Wbai\p;
          ZeroJunction\p => OneJunction\p;
+         OneJunction\p => uTbai\p1;
+         Wbai\p <= AdHji\p1;
+         OneJunction\p <= EndstopMin\p2;
+         p2 => AdHji\p2;
          EndstopMin\collision -> Or\input2;
          OneJunction\flow -> Integrate\input 320 272;
          Splitter2\output -> AdHji\H 424 368;
@@ -7205,16 +7203,16 @@ implementation_end;
         end;
         connections
          p1 => ZeroJunction\p;
-         p <= Wbai\p;
-         ZeroJunction\p => OneJunction\p;
-         OneJunction\p => uTbai\p1;
-         Wbai\p <= AdHji\p1;
          OneJunction\p <= EndstopMin\p2;
          p2 => AdHji\p2;
          OneJunction\p <= EndstopMax\p2;
          OneJunction\p => Rjoint\p;
          uTbai\p2 => Tbai\p;
          Tbai\p => Wbai\p;
+         p <= Wbai\p;
+         ZeroJunction\p => OneJunction\p;
+         OneJunction\p => uTbai\p1;
+         Wbai\p <= AdHji\p1;
          EndstopMin\collision -> Or\input2;
          OneJunction\flow -> Integrate\input 320 272;
          Integrate\q -> q;
@@ -8366,16 +8364,16 @@ implementation_end;
         end;
         connections
          p1 => ZeroJunction\p;
-         OneJunction\p <= EndstopMin\p2;
-         p2 => AdHji\p2;
-         OneJunction\p <= EndstopMax\p2;
-         OneJunction\p => Rjoint\p;
          uTbai\p2 => Tbai\p;
          Tbai\p => Wbai\p;
          p <= Wbai\p;
          ZeroJunction\p => OneJunction\p;
          OneJunction\p => uTbai\p1;
          Wbai\p <= AdHji\p1;
+         OneJunction\p <= EndstopMin\p2;
+         p2 => AdHji\p2;
+         OneJunction\p <= EndstopMax\p2;
+         OneJunction\p => Rjoint\p;
          EndstopMin\collision -> Or\input2;
          OneJunction\flow -> Integrate\input 320 272;
          Splitter2\output -> AdHji\H 424 368;
@@ -9506,15 +9504,15 @@ implementation_end;
         end;
         connections
          uTbai\p1 <= OneJunction\p;
+         OneJunction\p <= EndstopMin\p2;
+         Wbai\p <= AdHji\p1;
+         p2 => AdHji\p2;
          OneJunction\p <= EndstopMax\p2;
          Rjoint\p <= OneJunction\p;
          ZeroJunction\p => OneJunction\p;
          p1 => ZeroJunction\p;
          uTbai\p2 => Wbai\p;
          p <= Wbai\p;
-         OneJunction\p <= EndstopMin\p2;
-         Wbai\p <= AdHji\p1;
-         p2 => AdHji\p2;
          OneJunction\flow -> Integrate\input 288 336;
          Splitter2\output -> AdHji\H 424 368;
          MatrixMul\output -> Hout;
@@ -10647,15 +10645,15 @@ implementation_end;
         end;
         connections
          uTbai\p1 <= OneJunction\p;
+         uTbai\p2 => Wbai\p;
+         p <= Wbai\p;
+         OneJunction\p <= EndstopMin\p2;
          Wbai\p <= AdHji\p1;
          p2 => AdHji\p2;
          OneJunction\p <= EndstopMax\p2;
          Rjoint\p <= OneJunction\p;
          ZeroJunction\p => OneJunction\p;
          p1 => ZeroJunction\p;
-         uTbai\p2 => Wbai\p;
-         p <= Wbai\p;
-         OneJunction\p <= EndstopMin\p2;
          OneJunction\flow -> Integrate\input 288 336;
          EndstopMax\collision -> Or\input1;
          Integrate\q -> q;
@@ -10706,7 +10704,7 @@ j = Frame fixed in next body, fixed in joint
          signal out Hout [4,4];
         parameters
          real I[3,1] = [1.0; 1.0; 1.0];
-         real m = 1.155;
+         real m = 2.412;
          real COMdim[3,1] = [0.10453; 0.0017; -0.00297];
          real dim[3,1] = [0.033; 0.0; 0.019];
        end;
@@ -10879,7 +10877,7 @@ implementation_end;
             power in p1 [6,1];
            parameters
             real I[3,1] = [1.0; 1.0; 1.0];
-            real m = 1.155;
+            real m = 2.412;
           end;
           icon bg top
            figures
@@ -10925,7 +10923,7 @@ equations
            restrictions
             causality fixed out p;
            parameters
-            real m = 1.155;
+            real m = 2.412;
           end;
           icon bg bottom
            figures
@@ -11112,16 +11110,16 @@ implementation_end;
         end;
         connections
          AdHik\p2 => Ta0k\p;
-         Ta0k\p => EJS\p1;
-         p1 => AdHij\p2;
-         Ta00\p => AdHi0\p1;
-         Ta0k\p => InertialTensor\p;
          Ta0i\p <= AdHik1\p1;
          AdHi0\p2 => AdHik1\p2;
          Gravity\p => Ta00\p;
          Ta0i\p => AdHik\p1;
          p <= Ta0i\p;
          Ta0i\p <= AdHij\p1;
+         Ta0k\p => EJS\p1;
+         p1 => AdHij\p2;
+         Ta00\p => AdHi0\p1;
+         Ta0k\p => InertialTensor\p;
          Hin -> Splitter1\input;
          Hij\output -> Hout;
          Splitter1\output -> Hij\input;
@@ -11164,7 +11162,7 @@ k = Body fixed frame, principal inertial frame
          signal out Hout [4,4];
         parameters
          real I[3,1] = [1.0; 1.0; 1.0];
-         real m = 0.934;
+         real m = 1.155;
          real COMdim[3,1] = [0.001; 0.0967; 0.02107];
          real dim[3,1] = [0.0; 0.0; 0.155];
        end;
@@ -11337,7 +11335,7 @@ implementation_end;
             power in p1 [6,1];
            parameters
             real I[3,1] = [1.0; 1.0; 1.0];
-            real m = 0.934;
+            real m = 1.155;
           end;
           icon bg top
            figures
@@ -11383,7 +11381,7 @@ equations
            restrictions
             causality fixed out p;
            parameters
-            real m = 0.934;
+            real m = 1.155;
           end;
           icon bg bottom
            figures
@@ -11570,16 +11568,16 @@ implementation_end;
         end;
         connections
          AdHik\p2 => Ta0k\p;
-         Ta0k\p => EJS\p1;
-         p1 => AdHij\p2;
-         Ta00\p => AdHi0\p1;
-         Ta0k\p => InertialTensor\p;
          Ta0i\p <= AdHik1\p1;
          AdHi0\p2 => AdHik1\p2;
          Gravity\p => Ta00\p;
          Ta0i\p => AdHik\p1;
          p <= Ta0i\p;
          Ta0i\p <= AdHij\p1;
+         Ta0k\p => EJS\p1;
+         p1 => AdHij\p2;
+         Ta00\p => AdHi0\p1;
+         Ta0k\p => InertialTensor\p;
          Hin -> Splitter1\input;
          Hij\output -> Hout;
          Splitter1\output -> Hij\input;
@@ -11622,7 +11620,7 @@ k = Body fixed frame, principal inertial frame
          signal out Hout [4,4];
         parameters
          real I[3,1] = [1.0; 1.0; 1.0];
-         real m = 0.877;
+         real m = 0.934;
          real COMdim[3,1] = [0.011; 0.05103; -0.02319];
          real dim[3,1] = [0.0; 0.0; 0.135];
        end;
@@ -11795,7 +11793,7 @@ implementation_end;
             power in p1 [6,1];
            parameters
             real I[3,1] = [1.0; 1.0; 1.0];
-            real m = 0.877;
+            real m = 0.934;
           end;
           icon bg top
            figures
@@ -11841,7 +11839,7 @@ equations
            restrictions
             causality fixed out p;
            parameters
-            real m = 0.877;
+            real m = 0.934;
           end;
           icon bg bottom
            figures
@@ -12028,16 +12026,16 @@ implementation_end;
         end;
         connections
          AdHik\p2 => Ta0k\p;
-         p <= Ta0i\p;
-         Ta0i\p <= AdHij\p1;
-         Ta0k\p => EJS\p1;
-         p1 => AdHij\p2;
          Ta00\p => AdHi0\p1;
          Ta0k\p => InertialTensor\p;
          Ta0i\p <= AdHik1\p1;
          AdHi0\p2 => AdHik1\p2;
          Gravity\p => Ta00\p;
          Ta0i\p => AdHik\p1;
+         p <= Ta0i\p;
+         Ta0i\p <= AdHij\p1;
+         Ta0k\p => EJS\p1;
+         p1 => AdHij\p2;
          Hin -> Splitter1\input;
          Hij\output -> Hout;
          Splitter1\output -> Hij\input;
@@ -12080,7 +12078,7 @@ k = Body fixed frame, principal inertial frame
          signal out Hout [4,4];
         parameters
          real I[3,1] = [1.0; 1.0; 1.0];
-         real m = 0.251;
+         real m = 0.877;
          real COMdim[3,1] = [0.0; 0.00115; -0.01683];
          real dim[3,1] = [0.0; 0.0; 0.096];
        end;
@@ -12253,7 +12251,7 @@ implementation_end;
             power in p1 [6,1];
            parameters
             real I[3,1] = [1.0; 1.0; 1.0];
-            real m = 0.251;
+            real m = 0.877;
           end;
           icon bg top
            figures
@@ -12299,7 +12297,7 @@ equations
            restrictions
             causality fixed out p;
            parameters
-            real m = 0.251;
+            real m = 0.877;
           end;
           icon bg bottom
            figures
@@ -12486,16 +12484,16 @@ implementation_end;
         end;
         connections
          AdHik\p2 => Ta0k\p;
-         Ta0k\p => EJS\p1;
-         p1 => AdHij\p2;
-         Ta00\p => AdHi0\p1;
-         Ta0k\p => InertialTensor\p;
          Ta0i\p <= AdHik1\p1;
          AdHi0\p2 => AdHik1\p2;
          Gravity\p => Ta00\p;
          Ta0i\p => AdHik\p1;
          p <= Ta0i\p;
          Ta0i\p <= AdHij\p1;
+         Ta0k\p => EJS\p1;
+         p1 => AdHij\p2;
+         Ta00\p => AdHi0\p1;
+         Ta0k\p => InertialTensor\p;
          Hin -> Splitter1\input;
          Hij\output -> Hout;
          Splitter1\output -> Hij\input;
@@ -12538,7 +12536,7 @@ k = Body fixed frame, principal inertial frame
          signal out Hout [4,4];
         parameters
          real I[3,1] = [1.0; 1.0; 1.0];
-         real m = 0.12;
+         real m = 1.121;
          real COMdim[3,1] = [0.0; 0.0; 0.001];
          real dim[3,1] = [0.0; 0.0; 0.034];
        end;
@@ -12711,7 +12709,7 @@ implementation_end;
             power in p1 [6,1];
            parameters
             real I[3,1] = [1.0; 1.0; 1.0];
-            real m = 0.12;
+            real m = 1.121;
           end;
           icon bg top
            figures
@@ -12757,7 +12755,7 @@ equations
            restrictions
             causality fixed out p;
            parameters
-            real m = 0.12;
+            real m = 1.121;
           end;
           icon bg bottom
            figures
@@ -12944,16 +12942,16 @@ implementation_end;
         end;
         connections
          AdHik\p2 => Ta0k\p;
-         Ta00\p => AdHi0\p1;
-         Ta0k\p => InertialTensor\p;
-         Ta0i\p <= AdHik1\p1;
-         AdHi0\p2 => AdHik1\p2;
          Gravity\p => Ta00\p;
          Ta0i\p => AdHik\p1;
          p <= Ta0i\p;
          Ta0i\p <= AdHij\p1;
          Ta0k\p => EJS\p1;
          p1 => AdHij\p2;
+         Ta00\p => AdHi0\p1;
+         Ta0k\p => InertialTensor\p;
+         Ta0i\p <= AdHik1\p1;
+         AdHi0\p2 => AdHik1\p2;
          Hin -> Splitter1\input;
          Hij\output -> Hout;
          Splitter1\output -> Hij\input;
@@ -14442,40 +14440,40 @@ implementation_end;
         end;
         connections
          WheelLF\p2 => TF_LF\p1;
-         RwheelLF\p <= OneJunction4\p;
+         OneJunction4\p => WheelLF\p;
          WheelRF\p2 => TF_RF\p1;
+         TF_RR\p2 => OneJunction\p;
          OneJunction3\p => WheelLR\p;
          ZeroJunction\p => OneJunction\p;
          Rfloor\p <= OneJunction\p;
          WheelRR\p2 => TF_RR\p1;
          TF_LF\p2 => OneJunction\p;
          TF_RF\p2 => OneJunction\p;
-         TF_RR\p2 => OneJunction\p;
          Cfloor\p <= OneJunction\p;
+         MotorLR => OneJunction3\p;
          MotorLF => OneJunction4\p;
          MotorRF => OneJunction5\p;
          WheelLR\p2 => TF_LR\p1;
          p => ZeroJunction\p;
          p1 => ZeroJunction\p;
          MotorRR => OneJunction2\p;
-         MotorLR => OneJunction3\p;
          RwheelRR\p <= OneJunction2\p;
+         RwheelLF\p <= OneJunction4\p;
          OneJunction5\p => WheelRF\p;
          RwheelRF\p <= OneJunction5\p;
          TF_LR\p2 => OneJunction\p;
          OneJunction2\p => WheelRR\p;
          RwheelLR\p <= OneJunction3\p;
-         OneJunction4\p => WheelLF\p;
          OneJunction\flow -> Integrate2\input;
+         Splitter1\output -> Hout;
+         Splitter1\output -> MecanumWheelAnimation\Hbase0;
+         OneJunction4\flow -> MecanumWheelAnimation\vWheelLF;
          OneJunction5\flow -> MecanumWheelAnimation\vWheelRF;
          OneJunction3\flow -> MecanumWheelAnimation\vWheelLR;
          MecanumWheelAnimation\vWheelRR <- OneJunction2\flow;
          Integrate2\output -> MatrixMul\input1;
          Hin -> MatrixMul\input2;
          MatrixMul\output -> Splitter1\input;
-         Splitter1\output -> Hout;
-         Splitter1\output -> MecanumWheelAnimation\Hbase0;
-         OneJunction4\flow -> MecanumWheelAnimation\vWheelLF;
         end;
         parameterrelations
 WheelLF\WheelRadius = WheelRadius;
@@ -14695,49 +14693,49 @@ implementation_end;
      end;
      connections
       MecanumWheels\MotorLF <= Mux\port1 256 240 632 240;
-      JointBase1\p => Base\p1;
-      Mux\port8 => Joint34\p1 744 240 928 240;
       Link3\p1 <= Joint34\p;
       Mux\port7 => Joint23\p1 736 256 776 256;
+      Tfloor0\p => MecanumWheels\p1;
       MecanumWheels\p <= Base\p;
       Link3\p => Joint23\p2;
       Joint12\p => Link1\p1;
       Link2\p => Joint12\p2;
-      Tfloor0\p => MecanumWheels\p1;
       Joint45\p => Link4\p1;
       Mux\port9 => Joint45\p1 760 224 1088 224;
       Link5\p => Joint45\p2;
+      Link1\p => JointBase1\p2;
       Link5\p1 <= Wtip0\p;
       MecanumWheels\MotorLR <= Mux\port3 288 272 664 272;
       Mux\port <= joints;
       MecanumWheels\MotorRR <= Mux\port4 304 288 680 288;
-      Link1\p => JointBase1\p2;
       JointBase1\p1 <= Mux\port5 448 304 696 304;
+      JointBase1\p => Base\p1;
       MecanumWheels\MotorRF <= Mux\port2 272 256 648 256;
       Joint23\p => Link2\p1;
       Joint12\p1 <= Mux\port6 608 320 712 320;
       Link4\p => Joint34\p2;
+      Mux\port8 => Joint34\p1 744 240 928 240;
       MecanumWheels\Hout -> Splitter1\input;
-      Splitter1\output -> Base\Hin;
-      Base\Hout -> JointBase1\Hin;
-      Link1\Hout -> Joint12\Hin;
-      Link3\Hin <- Joint23\Hout 808 544;
       JointBase1\Hout -> Link1\Hin;
       Joint34\Hin <- Link3\Hout;
+      Link5\Hin <- Joint45\Hout;
       Link5\Hout -> Htip0\input;
       Joint45\q -> Submodel14\port5;
-      Link5\Hin <- Joint45\Hout;
       Joint34\q -> Submodel14\port4;
       Joint23\q -> Submodel14\port3;
       Joint12\q -> Submodel14\port2;
       JointBase1\q -> Submodel14\port1;
       Submodel14\output -> q;
+      Link4\Hin <- Joint34\Hout;
       Joint45\Hin <- Link4\Hout;
       Joint12\Hout -> Link2\Hin;
-      Link4\Hin <- Joint34\Hout;
       Joint23\Hin <- Link2\Hout;
+      Splitter1\output -> Base\Hin;
       Splitter1\output -> Submodel14\H0 328 632;
       Hfloor0\output -> MecanumWheels\Hin;
+      Base\Hout -> JointBase1\Hin;
+      Link1\Hout -> Joint12\Hin;
+      Link3\Hin <- Joint23\Hout 808 544;
      end;
      parameterrelations
 MecanumWheels\WheelRadius = MecanumWheelRadius;
@@ -15126,7 +15124,7 @@ port2base=control[1:3];implementation_end;
      <Value>0</Value>
     </Variable>
     <Variable>
-     <Name>interaction_control\C\x_initial</Name>
+     <Name>interaction_control\C\sub_state_initial</Name>
      <Rows>3</Rows>
      <Columns>1</Columns>
      <Value>0 0 0</Value>
@@ -15336,188 +15334,6 @@ port2base=control[1:3];implementation_end;
      <Value>0</Value>
     </Variable>
    </Initials>
-   <FavoriteParameters>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>0</RowIndex>
-     <ColumnIndex>0</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>0</RowIndex>
-     <ColumnIndex>1</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>0</RowIndex>
-     <ColumnIndex>2</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>0</RowIndex>
-     <ColumnIndex>3</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>0</RowIndex>
-     <ColumnIndex>4</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>0</RowIndex>
-     <ColumnIndex>5</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>1</RowIndex>
-     <ColumnIndex>0</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>1</RowIndex>
-     <ColumnIndex>1</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>1</RowIndex>
-     <ColumnIndex>2</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>1</RowIndex>
-     <ColumnIndex>3</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>1</RowIndex>
-     <ColumnIndex>4</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>1</RowIndex>
-     <ColumnIndex>5</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>2</RowIndex>
-     <ColumnIndex>0</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>2</RowIndex>
-     <ColumnIndex>1</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>2</RowIndex>
-     <ColumnIndex>2</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>2</RowIndex>
-     <ColumnIndex>3</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>2</RowIndex>
-     <ColumnIndex>4</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-    <Variable>
-     <Name>interaction_control\GravityCompensation1\Linkdim</Name>
-     <Rows>3</Rows>
-     <Columns>6</Columns>
-     <RowIndex>2</RowIndex>
-     <ColumnIndex>5</ColumnIndex>
-     <Value>0.024 0.033 0 0 0 0
-0 0 0 0 0 0
-0.096 0.019 0.155 0.135 0.096 0.034</Value>
-    </Variable>
-   </FavoriteParameters>
   </Variables>
   <PlotSpecs>
    <VarNames>
@@ -15735,22 +15551,22 @@ port2base=control[1:3];implementation_end;
     <VarName>Submodel4\Href0[1,2]</VarName>
     <VarName>Submodel4\Href0[2,2]</VarName>
     <VarName>Submodel4\Href0[3,2]</VarName>
-    <VarName>interaction_control\bond_to_HW.e[1]</VarName>
-    <VarName>interaction_control\bond_to_HW.e[2]</VarName>
-    <VarName>interaction_control\bond_to_HW.e[3]</VarName>
-    <VarName>interaction_control\bond_to_HW.e[4]</VarName>
-    <VarName>interaction_control\bond_to_HW.e[5]</VarName>
-    <VarName>interaction_control\bond_to_HW.e[6]</VarName>
-    <VarName>interaction_control\bond_to_HW.e[7]</VarName>
-    <VarName>interaction_control\bond_to_HW.e[8]</VarName>
-    <VarName>interaction_control\SignalMonitor\plot[1]</VarName>
-    <VarName>interaction_control\SignalMonitor\plot[2]</VarName>
-    <VarName>interaction_control\SignalMonitor\plot[3]</VarName>
-    <VarName>interaction_control\SignalMonitor\plot[4]</VarName>
-    <VarName>interaction_control\SignalMonitor\plot[5]</VarName>
-    <VarName>interaction_control\SignalMonitor\plot[6]</VarName>
-    <VarName>interaction_control\SignalMonitor\plot[7]</VarName>
-    <VarName>interaction_control\SignalMonitor\plot[8]</VarName>
+    <VarName>interaction_control\JointSoftLimits\state[1]</VarName>
+    <VarName>interaction_control\JointSoftLimits\state[2]</VarName>
+    <VarName>interaction_control\JointSoftLimits\state[3]</VarName>
+    <VarName>interaction_control\JointSoftLimits\state[4]</VarName>
+    <VarName>interaction_control\JointSoftLimits\state[5]</VarName>
+    <VarName>interaction_control\JointSoftLimits\state[6]</VarName>
+    <VarName>interaction_control\JointSoftLimits\state[7]</VarName>
+    <VarName>interaction_control\JointSoftLimits\state[8]</VarName>
+    <VarName>interaction_control\JointSoftLimits\p.e[1]</VarName>
+    <VarName>interaction_control\JointSoftLimits\p.e[2]</VarName>
+    <VarName>interaction_control\JointSoftLimits\p.e[3]</VarName>
+    <VarName>interaction_control\JointSoftLimits\p.e[4]</VarName>
+    <VarName>interaction_control\JointSoftLimits\p.e[5]</VarName>
+    <VarName>interaction_control\JointSoftLimits\p.e[6]</VarName>
+    <VarName>interaction_control\JointSoftLimits\p.e[7]</VarName>
+    <VarName>interaction_control\JointSoftLimits\p.e[8]</VarName>
    </VarNames>
    <Plots>
     <Plot>
@@ -16198,44 +16014,44 @@ port2base=control[1:3];implementation_end;
        <Position>
         <X>
          <VariableName>Plant\Link2\Hin[1,4]</VariableName>
-         <Value>-0.000780912576584393</Value>
+         <Value>3.4132206202663</Value>
         </X>
         <Y>
          <VariableName>Plant\Link2\Hin[2,4]</VariableName>
-         <Value>0.160402938527041</Value>
+         <Value>-3.22546553680795</Value>
         </Y>
         <Z>
          <VariableName>Plant\Link2\Hin[3,4]</VariableName>
-         <Value>0.109356865447575</Value>
+         <Value>0.086802317949004</Value>
         </Z>
        </Position>
        <Orientation>
         <ZAxis>
          <X>
      <VariableName>Plant\Link2\Hin[1,3]</VariableName>
-     <Value>-0.309847680817218</Value>
+     <Value>-0.906042398363602</Value>
          </X>
          <Y>
      <VariableName>Plant\Link2\Hin[2,3]</VariableName>
-     <Value>-0.809022858488637</Value>
+     <Value>-0.00696250295452759</Value>
          </Y>
          <Z>
      <VariableName>Plant\Link2\Hin[3,3]</VariableName>
-     <Value>0.499476154721191</Value>
+     <Value>0.423129644340998</Value>
          </Z>
         </ZAxis>
         <YAxis>
          <X>
      <VariableName>Plant\Link2\Hin[1,2]</VariableName>
-     <Value>-0.933928810946927</Value>
+     <Value>-0.00785862380071481</Value>
          </X>
          <Y>
      <VariableName>Plant\Link2\Hin[2,2]</VariableName>
-     <Value>0.357458866769579</Value>
+     <Value>0.999969050856561</Value>
          </Y>
          <Z>
      <VariableName>Plant\Link2\Hin[3,2]</VariableName>
-     <Value>-0.000366948316794818</Value>
+     <Value>-0.000373310845327299</Value>
          </Z>
         </YAxis>
         <OrientationType>Matrix</OrientationType>
@@ -16314,44 +16130,44 @@ port2base=control[1:3];implementation_end;
        <Position>
         <X>
          <VariableName>Plant\Link3\Hin[1,4]</VariableName>
-         <Value>-0.0488073031056423</Value>
+         <Value>3.27278403505541</Value>
         </X>
         <Y>
          <VariableName>Plant\Link3\Hin[2,4]</VariableName>
-         <Value>0.035004395455064</Value>
+         <Value>-3.22654472486937</Value>
         </Y>
         <Z>
          <VariableName>Plant\Link3\Hin[3,4]</VariableName>
-         <Value>0.186775669433211</Value>
+         <Value>0.152387419109913</Value>
         </Z>
        </Position>
        <Orientation>
         <ZAxis>
          <X>
      <VariableName>Plant\Link3\Hin[1,3]</VariableName>
-     <Value>-0.0536652628096802</Value>
+     <Value>-0.992982568126772</Value>
          </X>
          <Y>
      <VariableName>Plant\Link3\Hin[2,3]</VariableName>
-     <Value>-0.139195576404824</Value>
+     <Value>-0.00775966137568332</Value>
          </Y>
          <Z>
      <VariableName>Plant\Link3\Hin[3,3]</VariableName>
-     <Value>0.988809704178158</Value>
+     <Value>0.118005961932846</Value>
          </Z>
         </ZAxis>
         <YAxis>
          <X>
      <VariableName>Plant\Link3\Hin[1,2]</VariableName>
-     <Value>-0.933928810936668</Value>
+     <Value>-0.00785862162876726</Value>
          </X>
          <Y>
      <VariableName>Plant\Link3\Hin[2,2]</VariableName>
-     <Value>0.357458866796359</Value>
+     <Value>0.999969050873122</Value>
          </Y>
          <Z>
      <VariableName>Plant\Link3\Hin[3,2]</VariableName>
-     <Value>-0.000366948340192332</Value>
+     <Value>-0.000373312205667201</Value>
          </Z>
         </YAxis>
         <OrientationType>Matrix</OrientationType>
@@ -16436,44 +16252,44 @@ port2base=control[1:3];implementation_end;
        <Position>
         <X>
          <VariableName>Plant\Link1\Hin[1,4]</VariableName>
-         <Value>-0.0125724411713456</Value>
+         <Value>3.38020214578449</Value>
         </X>
         <Y>
          <VariableName>Plant\Link1\Hin[2,4]</VariableName>
-         <Value>0.129575847787642</Value>
+         <Value>-3.22573210481455</Value>
         </Y>
         <Z>
          <VariableName>Plant\Link1\Hin[3,4]</VariableName>
-         <Value>0.0903660695155894</Value>
+         <Value>0.06783630693206</Value>
         </Z>
        </Position>
        <Orientation>
         <ZAxis>
          <X>
      <VariableName>Plant\Link1\Hin[1,3]</VariableName>
-     <Value>-0.000243026237182932</Value>
+     <Value>0.00102667400826956</Value>
          </X>
          <Y>
      <VariableName>Plant\Link1\Hin[2,3]</VariableName>
-     <Value>0.000391594995915556</Value>
+     <Value>0.00038138396362757</Value>
          </Y>
          <Z>
      <VariableName>Plant\Link1\Hin[3,3]</VariableName>
-     <Value>0.999999893795798</Value>
+     <Value>0.999999400243197</Value>
          </Z>
         </ZAxis>
         <YAxis>
          <X>
      <VariableName>Plant\Link1\Hin[1,2]</VariableName>
-     <Value>-0.933928810937072</Value>
+     <Value>-0.00785862062653473</Value>
          </X>
          <Y>
      <VariableName>Plant\Link1\Hin[2,2]</VariableName>
-     <Value>0.357458866795295</Value>
+     <Value>0.999969050884009</Value>
          </Y>
          <Z>
      <VariableName>Plant\Link1\Hin[3,2]</VariableName>
-     <Value>-0.000366948347172905</Value>
+     <Value>-0.000373304142484627</Value>
          </Z>
         </YAxis>
         <OrientationType>Matrix</OrientationType>
@@ -16552,44 +16368,44 @@ port2base=control[1:3];implementation_end;
        <Position>
         <X>
          <VariableName>Plant\Link4\Hin[1,4]</VariableName>
-         <Value>-0.0560521135842689</Value>
+         <Value>3.13873137221723</Value>
         </X>
         <Y>
          <VariableName>Plant\Link4\Hin[2,4]</VariableName>
-         <Value>0.0162129926421771</Value>
+         <Value>-3.22759227928122</Value>
         </Y>
         <Z>
          <VariableName>Plant\Link4\Hin[3,4]</VariableName>
-         <Value>0.320264979484729</Value>
+         <Value>0.16831822588905</Value>
         </Z>
        </Position>
        <Orientation>
         <ZAxis>
          <X>
      <VariableName>Plant\Link4\Hin[1,3]</VariableName>
-     <Value>-0.345084211203684</Value>
+     <Value>-0.999859984155619</Value>
          </X>
          <Y>
      <VariableName>Plant\Link4\Hin[2,3]</VariableName>
-     <Value>-0.901328967704361</Value>
+     <Value>-0.0078522471125845</Value>
          </Y>
          <Z>
      <VariableName>Plant\Link4\Hin[3,3]</VariableName>
-     <Value>0.261768942303938</Value>
+     <Value>0.0147768162879397</Value>
          </Z>
         </ZAxis>
         <YAxis>
          <X>
      <VariableName>Plant\Link4\Hin[1,2]</VariableName>
-     <Value>-0.933928810950772</Value>
+     <Value>-0.0078586207914617</Value>
          </X>
          <Y>
      <VariableName>Plant\Link4\Hin[2,2]</VariableName>
-     <Value>0.357458866759528</Value>
+     <Value>0.999969050879659</Value>
          </Y>
          <Z>
      <VariableName>Plant\Link4\Hin[3,2]</VariableName>
-     <Value>-0.000366948322286065</Value>
+     <Value>-0.000373312321460927</Value>
          </Z>
         </YAxis>
         <OrientationType>Matrix</OrientationType>
@@ -16668,44 +16484,44 @@ port2base=control[1:3];implementation_end;
        <Position>
         <X>
          <VariableName>Plant\Link5\Hin[1,4]</VariableName>
-         <Value>-0.0891801978627914</Value>
+         <Value>3.042744801867</Value>
         </X>
         <Y>
          <VariableName>Plant\Link5\Hin[2,4]</VariableName>
-         <Value>-0.0703145882651958</Value>
+         <Value>-3.22834609509726</Value>
         </Y>
         <Z>
          <VariableName>Plant\Link5\Hin[3,4]</VariableName>
-         <Value>0.345394797948159</Value>
+         <Value>0.169736800428137</Value>
         </Z>
        </Position>
        <Orientation>
         <ZAxis>
          <X>
      <VariableName>Plant\Link5\Hin[1,3]</VariableName>
-     <Value>-0.345084211203684</Value>
+     <Value>-0.999859984155619</Value>
          </X>
          <Y>
      <VariableName>Plant\Link5\Hin[2,3]</VariableName>
-     <Value>-0.901328967704361</Value>
+     <Value>-0.0078522471125845</Value>
          </Y>
          <Z>
      <VariableName>Plant\Link5\Hin[3,3]</VariableName>
-     <Value>0.261768942303938</Value>
+     <Value>0.0147768162879397</Value>
          </Z>
         </ZAxis>
         <YAxis>
          <X>
      <VariableName>Plant\Link5\Hin[1,2]</VariableName>
-     <Value>0.891911730726166</Value>
+     <Value>0.00442319986235996</Value>
          </X>
          <Y>
      <VariableName>Plant\Link5\Hin[2,2]</VariableName>
-     <Value>-0.401760182387906</Value>
+     <Value>-0.975676132870774</Value>
          </Y>
          <Z>
      <VariableName>Plant\Link5\Hin[3,2]</VariableName>
-     <Value>-0.20756256994143</Value>
+     <Value>-0.219172350102171</Value>
          </Z>
         </YAxis>
         <OrientationType>Matrix</OrientationType>
@@ -16784,44 +16600,44 @@ port2base=control[1:3];implementation_end;
        <Position>
         <X>
          <VariableName>Plant\Base\Hin[1,4]</VariableName>
-         <Value>-0.0360677554011087</Value>
+         <Value>3.3561043237026</Value>
         </X>
         <Y>
          <VariableName>Plant\Base\Hin[2,4]</VariableName>
-         <Value>0.13432085768607</Value>
+         <Value>-3.22595576178743</Value>
         </Y>
         <Z>
          <VariableName>Plant\Base\Hin[3,4]</VariableName>
-         <Value>-0.00564150877127017</Value>
+         <Value>-0.0281389251060925</Value>
         </Z>
        </Position>
        <Orientation>
         <ZAxis>
          <X>
      <VariableName>Plant\Base\Hin[1,3]</VariableName>
-     <Value>-0.000243026237182932</Value>
+     <Value>0.00102667400826956</Value>
          </X>
          <Y>
      <VariableName>Plant\Base\Hin[2,3]</VariableName>
-     <Value>0.000391594995915556</Value>
+     <Value>0.00038138396362757</Value>
          </Y>
          <Z>
      <VariableName>Plant\Base\Hin[3,3]</VariableName>
-     <Value>0.999999893795798</Value>
+     <Value>0.999999400243197</Value>
          </Z>
         </ZAxis>
         <YAxis>
          <X>
      <VariableName>Plant\Base\Hin[1,2]</VariableName>
-     <Value>0.199275228386261</Value>
+     <Value>-0.00779389167090351</Value>
          </X>
          <Y>
      <VariableName>Plant\Base\Hin[2,2]</VariableName>
-     <Value>0.979943503941699</Value>
+     <Value>0.999969557460063</Value>
          </Y>
          <Z>
      <VariableName>Plant\Base\Hin[3,2]</VariableName>
-     <Value>-0.000335311899116575</Value>
+     <Value>-0.000373370791260913</Value>
          </Z>
         </YAxis>
         <OrientationType>Matrix</OrientationType>
@@ -16906,44 +16722,44 @@ port2base=control[1:3];implementation_end;
        <Position>
         <X>
          <VariableName>interaction_control\CalculateJ\Htip0[1,4]</VariableName>
-         <Value>-0.100814397632992</Value>
+         <Value>3.00849894572213</Value>
         </X>
         <Y>
          <VariableName>interaction_control\CalculateJ\Htip0[2,4]</VariableName>
-         <Value>-0.101118725727698</Value>
+         <Value>-3.228706137642</Value>
         </Y>
         <Z>
          <VariableName>interaction_control\CalculateJ\Htip0[3,4]</VariableName>
-         <Value>0.405860036963699</Value>
+         <Value>0.24402039020713</Value>
         </Z>
        </Position>
        <Orientation>
         <ZAxis>
          <X>
      <VariableName>interaction_control\CalculateJ\Htip0[1,3]</VariableName>
-     <Value>-0.345020579416171</Value>
+     <Value>-0.999874627908018</Value>
          </X>
          <Y>
      <VariableName>interaction_control\CalculateJ\Htip0[2,3]</VariableName>
-     <Value>-0.90143144068783</Value>
+     <Value>-0.00785749424490583</Value>
          </Y>
          <Z>
      <VariableName>interaction_control\CalculateJ\Htip0[3,3]</VariableName>
-     <Value>0.261499823171627</Value>
+     <Value>0.0137472997346422</Value>
          </Z>
         </ZAxis>
         <YAxis>
          <X>
      <VariableName>interaction_control\CalculateJ\Htip0[1,2]</VariableName>
-     <Value>0.891861263396702</Value>
+     <Value>0.0046482152718366</Value>
          </X>
          <Y>
      <VariableName>interaction_control\CalculateJ\Htip0[2,2]</VariableName>
-     <Value>-0.401678781440414</Value>
+     <Value>-0.975592467369076</Value>
          </Y>
          <Z>
      <VariableName>interaction_control\CalculateJ\Htip0[3,2]</VariableName>
-     <Value>-0.207936633119281</Value>
+     <Value>-0.219539818045625</Value>
          </Z>
         </YAxis>
         <OrientationType>Matrix</OrientationType>
@@ -17022,44 +16838,44 @@ port2base=control[1:3];implementation_end;
        <Position>
         <X>
          <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLF0[1,4]</VariableName>
-         <Value>0.144716668231309</Value>
+         <Value>3.57231812446939</Value>
         </X>
         <Y>
          <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLF0[2,4]</VariableName>
-         <Value>-0.0554952402085049</Value>
+         <Value>-3.37425654127396</Value>
         </Y>
         <Z>
          <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLF0[3,4]</VariableName>
-         <Value>0.0444767629336779</Value>
+         <Value>0.0216956878159401</Value>
         </Z>
        </Position>
        <Orientation>
         <ZAxis>
          <X>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLF0[1,3]</VariableName>
-     <Value>-0.199275358730712</Value>
+     <Value>0.00779470677589174</Value>
          </X>
          <Y>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLF0[2,3]</VariableName>
-     <Value>-0.979942881395277</Value>
+     <Value>-0.999968936685795</Value>
          </Y>
          <Z>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLF0[3,3]</VariableName>
-     <Value>0.00113163839986849</Value>
+     <Value>0.00116970498774925</Value>
          </Z>
         </ZAxis>
         <YAxis>
          <X>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLF0[1,2]</VariableName>
-     <Value>0.183678854447906</Value>
+     <Value>0.214197361447124</Value>
          </X>
          <Y>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLF0[2,2]</VariableName>
-     <Value>-0.0362174576948796</Value>
+     <Value>0.0028122448526948</Value>
          </Y>
          <Z>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLF0[3,2]</VariableName>
-     <Value>0.982318876020829</Value>
+     <Value>0.97678635413686</Value>
          </Z>
         </YAxis>
         <OrientationType>Matrix</OrientationType>
@@ -17138,44 +16954,44 @@ port2base=control[1:3];implementation_end;
        <Position>
         <X>
          <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRF0[1,4]</VariableName>
-         <Value>0.204499236753929</Value>
+         <Value>3.56997995667609</Value>
         </X>
         <Y>
          <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRF0[2,4]</VariableName>
-         <Value>0.238487811007167</Value>
+         <Value>-3.07426563689121</Value>
         </Y>
         <Z>
          <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRF0[3,4]</VariableName>
-         <Value>0.0443761693696092</Value>
+         <Value>0.0215836741106079</Value>
         </Z>
        </Position>
        <Orientation>
         <ZAxis>
          <X>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRF0[1,3]</VariableName>
-     <Value>-0.199275358730712</Value>
+     <Value>0.00779470677589174</Value>
          </X>
          <Y>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRF0[2,3]</VariableName>
-     <Value>-0.979942881395277</Value>
+     <Value>-0.999968936685795</Value>
          </Y>
          <Z>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRF0[3,3]</VariableName>
-     <Value>0.00113163839986849</Value>
+     <Value>0.00116970498774925</Value>
          </Z>
         </ZAxis>
         <YAxis>
          <X>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRF0[1,2]</VariableName>
-     <Value>-0.0601159463659155</Value>
+     <Value>-0.149930268509019</Value>
          </X>
          <Y>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRF0[2,2]</VariableName>
-     <Value>0.0133774297478018</Value>
+     <Value>-0.00232521482397723</Value>
          </Y>
          <Z>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRF0[3,2]</VariableName>
-     <Value>0.99810175701973</Value>
+     <Value>-0.988693839346051</Value>
          </Z>
         </YAxis>
         <OrientationType>Matrix</OrientationType>
@@ -17254,44 +17070,44 @@ port2base=control[1:3];implementation_end;
        <Position>
         <X>
          <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLR0[1,4]</VariableName>
-         <Value>-0.276659050179862</Value>
+         <Value>3.14233135812996</Value>
         </X>
         <Y>
          <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLR0[2,4]</VariableName>
-         <Value>0.03019306386456</Value>
+         <Value>-3.37760774828728</Value>
         </Y>
         <Z>
          <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLR0[3,4]</VariableName>
-         <Value>0.0443408024578344</Value>
+         <Value>0.0221384157108387</Value>
         </Z>
        </Position>
        <Orientation>
         <ZAxis>
          <X>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLR0[1,3]</VariableName>
-     <Value>-0.199275358730712</Value>
+     <Value>0.00779470677589174</Value>
          </X>
          <Y>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLR0[2,3]</VariableName>
-     <Value>-0.979942881395277</Value>
+     <Value>-0.999968936685795</Value>
          </Y>
          <Z>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLR0[3,3]</VariableName>
-     <Value>0.00113163839986849</Value>
+     <Value>0.00116970498774925</Value>
          </Z>
         </ZAxis>
         <YAxis>
          <X>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLR0[1,2]</VariableName>
-     <Value>-0.13151307541626</Value>
+     <Value>-0.152742285844975</Value>
          </X>
          <Y>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLR0[2,2]</VariableName>
-     <Value>0.0278880343713425</Value>
+     <Value>-0.00234663069868882</Value>
          </Y>
          <Z>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HLR0[3,2]</VariableName>
-     <Value>0.990922079950518</Value>
+     <Value>-0.98826326828392</Value>
          </Z>
         </YAxis>
         <OrientationType>Matrix</OrientationType>
@@ -17370,44 +17186,44 @@ port2base=control[1:3];implementation_end;
        <Position>
         <X>
          <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRR0[1,4]</VariableName>
-         <Value>-0.216876481657242</Value>
+         <Value>3.13999319033665</Value>
         </X>
         <Y>
          <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRR0[2,4]</VariableName>
-         <Value>0.324176115080232</Value>
+         <Value>-3.07761684390453</Value>
         </Y>
         <Z>
          <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRR0[3,4]</VariableName>
-         <Value>0.0442402088937656</Value>
+         <Value>0.0220264020055065</Value>
         </Z>
        </Position>
        <Orientation>
         <ZAxis>
          <X>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRR0[1,3]</VariableName>
-     <Value>-0.199275358730712</Value>
+     <Value>0.00779470677589174</Value>
          </X>
          <Y>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRR0[2,3]</VariableName>
-     <Value>-0.979942881395277</Value>
+     <Value>-0.999968936685795</Value>
          </Y>
          <Z>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRR0[3,3]</VariableName>
-     <Value>0.00113163839986849</Value>
+     <Value>0.00116970498774925</Value>
          </Z>
         </ZAxis>
         <YAxis>
          <X>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRR0[1,2]</VariableName>
-     <Value>0.979943346634884</Value>
+     <Value>0.161484694588293</Value>
          </X>
          <Y>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRR0[2,2]</VariableName>
-     <Value>-0.199274471953194</Value>
+     <Value>0.00241315021579173</Value>
          </Y>
          <Z>
      <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRR0[3,2]</VariableName>
-     <Value>0.000849831629670579</Value>
+     <Value>0.986872266364681</Value>
          </Z>
         </YAxis>
         <OrientationType>Matrix</OrientationType>
@@ -18217,44 +18033,44 @@ port2base=control[1:3];implementation_end;
      <Position>
       <X>
        <VariableName>interaction_control\Gain\H[1,4]</VariableName>
-       <Value>-0.100000918657741</Value>
+       <Value>-0.0999999980761788</Value>
       </X>
       <Y>
        <VariableName>interaction_control\Gain\H[2,4]</VariableName>
-       <Value>-0.100000918657741</Value>
+       <Value>-0.0999999980761788</Value>
       </Y>
       <Z>
        <VariableName>interaction_control\Gain\H[3,4]</VariableName>
-       <Value>0.399994488053551</Value>
+       <Value>0.400000011542927</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>interaction_control\Gain\H[1,3]</VariableName>
-        <Value>-0.400999117919153</Value>
+        <Value>-0.400981654194886</Value>
        </X>
        <Y>
         <VariableName>interaction_control\Gain\H[2,3]</VariableName>
-        <Value>-0.876156515921415</Value>
+        <Value>-0.876160987941762</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\Gain\H[3,3]</VariableName>
-        <Value>0.2674873212631</Value>
+        <Value>0.267498852722864</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>interaction_control\Gain\H[1,2]</VariableName>
-        <Value>0.909289780741958</Value>
+        <Value>0.909297442837521</Value>
        </X>
        <Y>
         <VariableName>interaction_control\Gain\H[2,2]</VariableName>
-        <Value>-0.416163543139283</Value>
+        <Value>-0.416146801560633</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\Gain\H[3,2]</VariableName>
-        <Value>-1.38777878078145e-017</Value>
+        <Value>0</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -18332,11 +18148,11 @@ port2base=control[1:3];implementation_end;
      <Position>
       <X>
        <VariableName>interaction_control\CalculateJ\H10[1,4]</VariableName>
-       <Value>-0.012537923268206</Value>
+       <Value>3.3800564258959</Value>
       </X>
       <Y>
        <VariableName>interaction_control\CalculateJ\H10[2,4]</VariableName>
-       <Value>0.12952023963531</Value>
+       <Value>-3.22578626080881</Value>
       </Y>
       <Z>
        <VariableName>interaction_control\CalculateJ\H10[3,4]</VariableName>
@@ -18361,11 +18177,11 @@ port2base=control[1:3];implementation_end;
       <YAxis>
        <X>
         <VariableName>interaction_control\CalculateJ\H10[1,2]</VariableName>
-        <Value>-0.933928874480581</Value>
+        <Value>-0.00785823683720675</Value>
        </X>
        <Y>
         <VariableName>interaction_control\CalculateJ\H10[2,2]</VariableName>
-        <Value>0.357458889120743</Value>
+        <Value>0.999969123580229</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\CalculateJ\H10[3,2]</VariableName>
@@ -18447,11 +18263,11 @@ port2base=control[1:3];implementation_end;
      <Position>
       <X>
        <VariableName>interaction_control\CalculateJ\H20[1,4]</VariableName>
-       <Value>-0.000741779927221515</Value>
+       <Value>3.41305540697404</Value>
       </X>
       <Y>
        <VariableName>interaction_control\CalculateJ\H20[2,4]</VariableName>
-       <Value>0.16033989249317</Value>
+       <Value>-3.22552693899318</Value>
       </Y>
       <Z>
        <VariableName>interaction_control\CalculateJ\H20[3,4]</VariableName>
@@ -18462,29 +18278,29 @@ port2base=control[1:3];implementation_end;
       <ZAxis>
        <X>
         <VariableName>interaction_control\CalculateJ\H20[1,3]</VariableName>
-        <Value>-0.309726281462386</Value>
+        <Value>-0.9064763116505</Value>
        </X>
        <Y>
         <VariableName>interaction_control\CalculateJ\H20[2,3]</VariableName>
-        <Value>-0.809218419927207</Value>
+        <Value>-0.00712352549323065</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\CalculateJ\H20[3,3]</VariableName>
-        <Value>0.499234593575002</Value>
+        <Value>0.422196579570527</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>interaction_control\CalculateJ\H20[1,2]</VariableName>
-        <Value>-0.933928874480581</Value>
+        <Value>-0.00785823683720675</Value>
        </X>
        <Y>
         <VariableName>interaction_control\CalculateJ\H20[2,2]</VariableName>
-        <Value>0.357458889120743</Value>
+        <Value>0.999969123580229</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\CalculateJ\H20[3,2]</VariableName>
-        <Value>2.77555756156289e-017</Value>
+        <Value>0</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -18562,44 +18378,44 @@ port2base=control[1:3];implementation_end;
      <Position>
       <X>
        <VariableName>interaction_control\CalculateJ\H30[1,4]</VariableName>
-       <Value>-0.0487493535538914</Value>
+       <Value>3.27255157866822</Value>
       </X>
       <Y>
        <VariableName>interaction_control\CalculateJ\H30[2,4]</VariableName>
-       <Value>0.0349110374044526</Value>
+       <Value>-3.22663108544463</Value>
       </Y>
       <Z>
        <VariableName>interaction_control\CalculateJ\H30[3,4]</VariableName>
-       <Value>0.238381362004125</Value>
+       <Value>0.226440469833432</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>interaction_control\CalculateJ\H30[1,3]</VariableName>
-        <Value>-0.0534249537407294</Value>
+        <Value>-0.993103194948442</Value>
        </X>
        <Y>
         <VariableName>interaction_control\CalculateJ\H30[2,3]</VariableName>
-        <Value>-0.139582784020243</Value>
+        <Value>-0.00780428107795013</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\CalculateJ\H30[3,3]</VariableName>
-        <Value>0.988768132942683</Value>
+        <Value>0.116983491912552</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>interaction_control\CalculateJ\H30[1,2]</VariableName>
-        <Value>-0.933928874480581</Value>
+        <Value>-0.00785823683720675</Value>
        </X>
        <Y>
         <VariableName>interaction_control\CalculateJ\H30[2,2]</VariableName>
-        <Value>0.357458889120743</Value>
+        <Value>0.999969123580229</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\CalculateJ\H30[3,2]</VariableName>
-        <Value>6.93889390390723e-018</Value>
+        <Value>1.0842021724855e-019</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -18677,44 +18493,44 @@ port2base=control[1:3];implementation_end;
      <Position>
       <X>
        <VariableName>interaction_control\CalculateJ\H40[1,4]</VariableName>
-       <Value>-0.0559617223088899</Value>
+       <Value>3.13848264735018</Value>
       </X>
       <Y>
        <VariableName>interaction_control\CalculateJ\H40[2,4]</VariableName>
-       <Value>0.0160673615617198</Value>
+       <Value>-3.22768466339016</Value>
       </Y>
       <Z>
        <VariableName>interaction_control\CalculateJ\H40[3,4]</VariableName>
-       <Value>0.371865059951388</Value>
+       <Value>0.242233241241626</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>interaction_control\CalculateJ\H40[1,3]</VariableName>
-        <Value>-0.345020579416171</Value>
+        <Value>-0.999874627908018</Value>
        </X>
        <Y>
         <VariableName>interaction_control\CalculateJ\H40[2,3]</VariableName>
-        <Value>-0.90143144068783</Value>
+        <Value>-0.00785749424490583</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\CalculateJ\H40[3,3]</VariableName>
-        <Value>0.261499823171627</Value>
+        <Value>0.0137472997346422</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>interaction_control\CalculateJ\H40[1,2]</VariableName>
-        <Value>-0.933928874480581</Value>
+        <Value>-0.00785823683720675</Value>
        </X>
        <Y>
         <VariableName>interaction_control\CalculateJ\H40[2,2]</VariableName>
-        <Value>0.357458889120743</Value>
+        <Value>0.999969123580229</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\CalculateJ\H40[3,2]</VariableName>
-        <Value>1.38777878078145e-017</Value>
+        <Value>1.35525271560688e-020</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -18792,44 +18608,44 @@ port2base=control[1:3];implementation_end;
      <Position>
       <X>
        <VariableName>interaction_control\CalculateJ\H50[1,4]</VariableName>
-       <Value>-0.0890836979328423</Value>
+       <Value>3.04249468307101</Value>
       </X>
       <Y>
        <VariableName>interaction_control\CalculateJ\H50[2,4]</VariableName>
-       <Value>-0.0704700567443119</Value>
+       <Value>-3.22843898283767</Value>
       </Y>
       <Z>
        <VariableName>interaction_control\CalculateJ\H50[3,4]</VariableName>
-       <Value>0.396969042975864</Value>
+       <Value>0.243552982016152</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>interaction_control\CalculateJ\H50[1,3]</VariableName>
-        <Value>-0.345020579416171</Value>
+        <Value>-0.999874627908018</Value>
        </X>
        <Y>
         <VariableName>interaction_control\CalculateJ\H50[2,3]</VariableName>
-        <Value>-0.90143144068783</Value>
+        <Value>-0.00785749424490583</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\CalculateJ\H50[3,3]</VariableName>
-        <Value>0.261499823171627</Value>
+        <Value>0.0137472997346422</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>interaction_control\CalculateJ\H50[1,2]</VariableName>
-        <Value>0.891861263396702</Value>
+        <Value>0.0046482152718366</Value>
        </X>
        <Y>
         <VariableName>interaction_control\CalculateJ\H50[2,2]</VariableName>
-        <Value>-0.401678781440414</Value>
+        <Value>-0.975592467369076</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\CalculateJ\H50[3,2]</VariableName>
-        <Value>-0.207936633119281</Value>
+        <Value>-0.219539818045625</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -18907,44 +18723,44 @@ port2base=control[1:3];implementation_end;
      <Position>
       <X>
        <VariableName>interaction_control\CalculateJ\Htip0[1,4]</VariableName>
-       <Value>-0.100814397632992</Value>
+       <Value>3.00849894572213</Value>
       </X>
       <Y>
        <VariableName>interaction_control\CalculateJ\Htip0[2,4]</VariableName>
-       <Value>-0.101118725727698</Value>
+       <Value>-3.228706137642</Value>
       </Y>
       <Z>
        <VariableName>interaction_control\CalculateJ\Htip0[3,4]</VariableName>
-       <Value>0.405860036963699</Value>
+       <Value>0.24402039020713</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>interaction_control\CalculateJ\Htip0[1,3]</VariableName>
-        <Value>-0.345020579416171</Value>
+        <Value>-0.999874627908018</Value>
        </X>
        <Y>
         <VariableName>interaction_control\CalculateJ\Htip0[2,3]</VariableName>
-        <Value>-0.90143144068783</Value>
+        <Value>-0.00785749424490583</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\CalculateJ\Htip0[3,3]</VariableName>
-        <Value>0.261499823171627</Value>
+        <Value>0.0137472997346422</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>interaction_control\CalculateJ\Htip0[1,2]</VariableName>
-        <Value>0.891861263396702</Value>
+        <Value>0.0046482152718366</Value>
        </X>
        <Y>
         <VariableName>interaction_control\CalculateJ\Htip0[2,2]</VariableName>
-        <Value>-0.401678781440414</Value>
+        <Value>-0.975592467369076</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\CalculateJ\Htip0[3,2]</VariableName>
-        <Value>-0.207936633119281</Value>
+        <Value>-0.219539818045625</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -19138,44 +18954,44 @@ port2base=control[1:3];implementation_end;
      <Position>
       <X>
        <VariableName>interaction_control\GravityCompensation1\Joint45\Hout[1,4]</VariableName>
-       <Value>-0.0111574470191357</Value>
+       <Value>-0.313572165137555</Value>
       </X>
       <Y>
        <VariableName>interaction_control\GravityCompensation1\Joint45\Hout[2,4]</VariableName>
-       <Value>-0.211232876664867</Value>
+       <Value>-2.18513744602432e-005</Value>
       </Y>
       <Z>
        <VariableName>interaction_control\GravityCompensation1\Joint45\Hout[3,4]</VariableName>
-       <Value>0.350969042975864</Value>
+       <Value>0.197552982016152</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>interaction_control\GravityCompensation1\Joint45\Hout[1,3]</VariableName>
-        <Value>-0.158467829145108</Value>
+        <Value>-0.99990549931516</Value>
        </X>
        <Y>
         <VariableName>interaction_control\GravityCompensation1\Joint45\Hout[2,3]</VariableName>
-        <Value>-0.952105976037985</Value>
+        <Value>-6.47248551476061e-005</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\GravityCompensation1\Joint45\Hout[3,3]</VariableName>
-        <Value>0.261499823171627</Value>
+        <Value>0.0137472997346422</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>interaction_control\GravityCompensation1\Joint45\Hout[1,2]</VariableName>
-        <Value>0.954018313137997</Value>
+        <Value>-0.0029552134439127</Value>
        </X>
        <Y>
         <VariableName>interaction_control\GravityCompensation1\Joint45\Hout[2,2]</VariableName>
-        <Value>-0.215896768860372</Value>
+        <Value>-0.975599064680771</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\GravityCompensation1\Joint45\Hout[3,2]</VariableName>
-        <Value>-0.207936633119281</Value>
+        <Value>-0.219539818045625</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -19254,44 +19070,44 @@ port2base=control[1:3];implementation_end;
      <Position>
       <X>
        <VariableName>interaction_control\GravityCompensation1\Joint34\Hout[1,4]</VariableName>
-       <Value>0.00405546457879469</Value>
+       <Value>-0.217581237203299</Value>
       </X>
       <Y>
        <VariableName>interaction_control\GravityCompensation1\Joint34\Hout[2,4]</VariableName>
-       <Value>-0.119830702965221</Value>
+       <Value>-1.5637788366073e-005</Value>
       </Y>
       <Z>
        <VariableName>interaction_control\GravityCompensation1\Joint34\Hout[3,4]</VariableName>
-       <Value>0.325865059951388</Value>
+       <Value>0.196233241241626</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>interaction_control\GravityCompensation1\Joint34\Hout[1,3]</VariableName>
-        <Value>-0.158467829145108</Value>
+        <Value>-0.99990549931516</Value>
        </X>
        <Y>
         <VariableName>interaction_control\GravityCompensation1\Joint34\Hout[2,3]</VariableName>
-        <Value>-0.952105976037985</Value>
+        <Value>-6.47248551476061e-005</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\GravityCompensation1\Joint34\Hout[3,3]</VariableName>
-        <Value>0.261499823171627</Value>
+        <Value>0.0137472997346422</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>interaction_control\GravityCompensation1\Joint34\Hout[1,2]</VariableName>
-        <Value>-0.986430273509091</Value>
+        <Value>-6.47309721332013e-005</Value>
        </X>
        <Y>
         <VariableName>interaction_control\GravityCompensation1\Joint34\Hout[2,2]</VariableName>
-        <Value>0.164180740358849</Value>
+        <Value>0.999999997904951</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\GravityCompensation1\Joint34\Hout[3,2]</VariableName>
-        <Value>-6.93889390390723e-018</Value>
+        <Value>-2.11758236813575e-022</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -19370,44 +19186,44 @@ port2base=control[1:3];implementation_end;
      <Position>
       <X>
        <VariableName>interaction_control\GravityCompensation1\Joint23\Hout[1,4]</VariableName>
-       <Value>0.00736810297715524</Value>
+       <Value>-0.0835081664697288</Value>
       </X>
       <Y>
        <VariableName>interaction_control\GravityCompensation1\Joint23\Hout[2,4]</VariableName>
-       <Value>-0.0999277180341666</Value>
+       <Value>-6.95910814242326e-006</Value>
       </Y>
       <Z>
        <VariableName>interaction_control\GravityCompensation1\Joint23\Hout[3,4]</VariableName>
-       <Value>0.192381362004125</Value>
+       <Value>0.180440469833432</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>interaction_control\GravityCompensation1\Joint23\Hout[1,3]</VariableName>
-        <Value>-0.0245380622100782</Value>
+        <Value>-0.993133857285708</Value>
        </X>
        <Y>
         <VariableName>interaction_control\GravityCompensation1\Joint23\Hout[2,3]</VariableName>
-        <Value>-0.14742951800781</Value>
+        <Value>-6.42865201751833e-005</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\GravityCompensation1\Joint23\Hout[3,3]</VariableName>
-        <Value>0.988768132942683</Value>
+        <Value>0.116983491912552</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>interaction_control\GravityCompensation1\Joint23\Hout[1,2]</VariableName>
-        <Value>-0.986430273509091</Value>
+        <Value>-6.47309721332013e-005</Value>
        </X>
        <Y>
         <VariableName>interaction_control\GravityCompensation1\Joint23\Hout[2,2]</VariableName>
-        <Value>0.164180740358849</Value>
+        <Value>0.999999997904951</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\GravityCompensation1\Joint23\Hout[3,2]</VariableName>
-        <Value>-2.42861286636753e-017</Value>
+        <Value>-8.470329472543e-022</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -19796,44 +19612,44 @@ port2base=control[1:3];implementation_end;
         <Position>
          <X>
      <VariableName>interaction_control\Gain\H[1,4]</VariableName>
-     <Value>-0.100000918657741</Value>
+     <Value>-0.0999999980761788</Value>
          </X>
          <Y>
      <VariableName>interaction_control\Gain\H[2,4]</VariableName>
-     <Value>-0.100000918657741</Value>
+     <Value>-0.0999999980761788</Value>
          </Y>
          <Z>
      <VariableName>interaction_control\Gain\H[3,4]</VariableName>
-     <Value>0.399994488053551</Value>
+     <Value>0.400000011542927</Value>
          </Z>
         </Position>
         <Orientation>
          <ZAxis>
      <X>
       <VariableName>interaction_control\Gain\H[1,3]</VariableName>
-      <Value>-0.400999117919153</Value>
+      <Value>-0.400981654194886</Value>
      </X>
      <Y>
       <VariableName>interaction_control\Gain\H[2,3]</VariableName>
-      <Value>-0.876156515921415</Value>
+      <Value>-0.876160987941762</Value>
      </Y>
      <Z>
       <VariableName>interaction_control\Gain\H[3,3]</VariableName>
-      <Value>0.2674873212631</Value>
+      <Value>0.267498852722864</Value>
      </Z>
          </ZAxis>
          <YAxis>
      <X>
       <VariableName>interaction_control\Gain\H[1,2]</VariableName>
-      <Value>0.909289780741958</Value>
+      <Value>0.909297442837521</Value>
      </X>
      <Y>
       <VariableName>interaction_control\Gain\H[2,2]</VariableName>
-      <Value>-0.416163543139283</Value>
+      <Value>-0.416146801560633</Value>
      </Y>
      <Z>
       <VariableName>interaction_control\Gain\H[3,2]</VariableName>
-      <Value>-1.38777878078145e-017</Value>
+      <Value>0</Value>
      </Z>
          </YAxis>
          <OrientationType>Matrix</OrientationType>
@@ -19865,7 +19681,7 @@ port2base=control[1:3];implementation_end;
       </Y>
       <Z>
        <VariableName>interaction_control\CtipControl\stenght</VariableName>
-       <Value>6.02626789200043</Value>
+       <Value>0.00441315051110022</Value>
       </Z>
      </ScaleValue>
      <OverrideColor>true</OverrideColor>
@@ -19917,44 +19733,44 @@ port2base=control[1:3];implementation_end;
      <Position>
       <X>
        <VariableName>interaction_control\CtipControl\state[1,4]</VariableName>
-       <Value>-0.00528938423198139</Value>
+       <Value>0.565275130271858</Value>
       </X>
       <Y>
        <VariableName>interaction_control\CtipControl\state[2,4]</VariableName>
-       <Value>-0.000274497568264531</Value>
+       <Value>4.12855119366237</Value>
       </Y>
       <Z>
        <VariableName>interaction_control\CtipControl\state[3,4]</VariableName>
-       <Value>0.00287453826511996</Value>
+       <Value>1.45307484391867</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>interaction_control\CtipControl\state[1,3]</VariableName>
-        <Value>0.00568533194146353</Value>
+        <Value>0.0999697382660589</Value>
        </X>
        <Y>
         <VariableName>interaction_control\CtipControl\state[2,3]</VariableName>
-        <Value>0.061419215245002</Value>
+        <Value>-0.90591357121658</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\CtipControl\state[3,3]</VariableName>
-        <Value>0.998095865635863</Value>
+        <Value>0.41149319911347</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>interaction_control\CtipControl\state[1,2]</VariableName>
-        <Value>0.198776790804096</Value>
+        <Value>0.448321185105954</Value>
        </X>
        <Y>
         <VariableName>interaction_control\CtipControl\state[2,2]</VariableName>
-        <Value>0.978124397534345</Value>
+        <Value>0.410216295182727</Value>
        </Y>
        <Z>
         <VariableName>interaction_control\CtipControl\state[3,2]</VariableName>
-        <Value>-0.0613225112474915</Value>
+        <Value>0.794185561535685</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -20035,7 +19851,7 @@ port2base=control[1:3];implementation_end;
      <XAxes>
       <Axis>
        <Minimum>0</Minimum>
-       <Maximum>8.44390148147937</Maximum>
+       <Maximum>40</Maximum>
        <Linear>true</Linear>
        <Scaling>3</Scaling>
        <Label>time</Label>
@@ -20043,60 +19859,60 @@ port2base=control[1:3];implementation_end;
      </XAxes>
      <YAxes>
       <Axis>
-       <Minimum>-80</Minimum>
-       <Maximum>120</Maximum>
+       <Minimum>-400</Minimum>
+       <Maximum>100</Maximum>
        <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label></Label>
+       <Scaling>0</Scaling>
+       <Label>interaction_control\JointSoftLimits\p.e[1]</Label>
       </Axis>
       <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
+       <Minimum>-400</Minimum>
+       <Maximum>100</Maximum>
        <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>interaction_control\bond_to_HW.e[2]</Label>
+       <Scaling>0</Scaling>
+       <Label>interaction_control\JointSoftLimits\p.e[2]</Label>
       </Axis>
       <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
+       <Minimum>-400</Minimum>
+       <Maximum>100</Maximum>
        <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>interaction_control\bond_to_HW.e[3]</Label>
+       <Scaling>0</Scaling>
+       <Label>interaction_control\JointSoftLimits\p.e[3]</Label>
       </Axis>
       <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
+       <Minimum>-400</Minimum>
+       <Maximum>100</Maximum>
        <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>interaction_control\bond_to_HW.e[4]</Label>
+       <Scaling>0</Scaling>
+       <Label>interaction_control\JointSoftLimits\p.e[4]</Label>
       </Axis>
       <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
+       <Minimum>-400</Minimum>
+       <Maximum>100</Maximum>
        <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>interaction_control\bond_to_HW.e[5]</Label>
+       <Scaling>0</Scaling>
+       <Label>interaction_control\JointSoftLimits\p.e[5]</Label>
       </Axis>
       <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
+       <Minimum>-400</Minimum>
+       <Maximum>100</Maximum>
        <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>interaction_control\bond_to_HW.e[6]</Label>
+       <Scaling>0</Scaling>
+       <Label>interaction_control\JointSoftLimits\p.e[6]</Label>
       </Axis>
       <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
+       <Minimum>-400</Minimum>
+       <Maximum>100</Maximum>
        <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>interaction_control\bond_to_HW.e[7]</Label>
+       <Scaling>0</Scaling>
+       <Label>interaction_control\JointSoftLimits\p.e[7]</Label>
       </Axis>
       <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
+       <Minimum>-400</Minimum>
+       <Maximum>100</Maximum>
        <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>interaction_control\bond_to_HW.e[8]</Label>
+       <Scaling>0</Scaling>
+       <Label>interaction_control\JointSoftLimits\p.e[8]</Label>
       </Axis>
      </YAxes>
      <ZAxes>
@@ -20117,7 +19933,7 @@ port2base=control[1:3];implementation_end;
        </XCurveData>
        <YCurveData>
         <ShowUnit>true</ShowUnit>
-        <VarName>interaction_control\bond_to_HW.e[1]</VarName>
+        <VarName>interaction_control\JointSoftLimits\p.e[1]</VarName>
        </YCurveData>
       </Curve>
       <Curve>
@@ -20135,7 +19951,7 @@ port2base=control[1:3];implementation_end;
        </XCurveData>
        <YCurveData>
         <ShowUnit>true</ShowUnit>
-        <VarName>interaction_control\bond_to_HW.e[2]</VarName>
+        <VarName>interaction_control\JointSoftLimits\p.e[2]</VarName>
        </YCurveData>
       </Curve>
       <Curve>
@@ -20153,7 +19969,7 @@ port2base=control[1:3];implementation_end;
        </XCurveData>
        <YCurveData>
         <ShowUnit>true</ShowUnit>
-        <VarName>interaction_control\bond_to_HW.e[3]</VarName>
+        <VarName>interaction_control\JointSoftLimits\p.e[3]</VarName>
        </YCurveData>
       </Curve>
       <Curve>
@@ -20171,7 +19987,7 @@ port2base=control[1:3];implementation_end;
        </XCurveData>
        <YCurveData>
         <ShowUnit>true</ShowUnit>
-        <VarName>interaction_control\bond_to_HW.e[4]</VarName>
+        <VarName>interaction_control\JointSoftLimits\p.e[4]</VarName>
        </YCurveData>
       </Curve>
       <Curve>
@@ -20189,7 +20005,7 @@ port2base=control[1:3];implementation_end;
        </XCurveData>
        <YCurveData>
         <ShowUnit>true</ShowUnit>
-        <VarName>interaction_control\bond_to_HW.e[5]</VarName>
+        <VarName>interaction_control\JointSoftLimits\p.e[5]</VarName>
        </YCurveData>
       </Curve>
       <Curve>
@@ -20207,7 +20023,7 @@ port2base=control[1:3];implementation_end;
        </XCurveData>
        <YCurveData>
         <ShowUnit>true</ShowUnit>
-        <VarName>interaction_control\bond_to_HW.e[6]</VarName>
+        <VarName>interaction_control\JointSoftLimits\p.e[6]</VarName>
        </YCurveData>
       </Curve>
       <Curve>
@@ -20225,7 +20041,7 @@ port2base=control[1:3];implementation_end;
        </XCurveData>
        <YCurveData>
         <ShowUnit>true</ShowUnit>
-        <VarName>interaction_control\bond_to_HW.e[7]</VarName>
+        <VarName>interaction_control\JointSoftLimits\p.e[7]</VarName>
        </YCurveData>
       </Curve>
       <Curve>
@@ -20243,7 +20059,7 @@ port2base=control[1:3];implementation_end;
        </XCurveData>
        <YCurveData>
         <ShowUnit>true</ShowUnit>
-        <VarName>interaction_control\bond_to_HW.e[8]</VarName>
+        <VarName>interaction_control\JointSoftLimits\p.e[8]</VarName>
        </YCurveData>
       </Curve>
      </Curves>
@@ -20251,7 +20067,47 @@ port2base=control[1:3];implementation_end;
       <ShowLegenda>true</ShowLegenda>
      </Legenda>
      <StripChartPlots>
-      <DistributState>0</DistributState>
+      <DistributState>2</DistributState>
+      <StripChartPlot>
+       <Legenda>
+        <ShowLegenda>true</ShowLegenda>
+       </Legenda>
+      </StripChartPlot>
+      <StripChartPlot>
+       <Legenda>
+        <ShowLegenda>true</ShowLegenda>
+       </Legenda>
+      </StripChartPlot>
+      <StripChartPlot>
+       <Legenda>
+        <ShowLegenda>true</ShowLegenda>
+       </Legenda>
+      </StripChartPlot>
+      <StripChartPlot>
+       <Legenda>
+        <ShowLegenda>true</ShowLegenda>
+       </Legenda>
+      </StripChartPlot>
+      <StripChartPlot>
+       <Legenda>
+        <ShowLegenda>true</ShowLegenda>
+       </Legenda>
+      </StripChartPlot>
+      <StripChartPlot>
+       <Legenda>
+        <ShowLegenda>true</ShowLegenda>
+       </Legenda>
+      </StripChartPlot>
+      <StripChartPlot>
+       <Legenda>
+        <ShowLegenda>true</ShowLegenda>
+       </Legenda>
+      </StripChartPlot>
+      <StripChartPlot>
+       <Legenda>
+        <ShowLegenda>true</ShowLegenda>
+       </Legenda>
+      </StripChartPlot>
      </StripChartPlots>
     </Plot>
     <Plot>
@@ -20271,7 +20127,7 @@ port2base=control[1:3];implementation_end;
      <PlotBGColor>16777215</PlotBGColor>
      <ShowPlotTitle>true</ShowPlotTitle>
      <TitlePosition>1</TitlePosition>
-     <PlotTitle>model</PlotTitle>
+     <PlotTitle>state</PlotTitle>
      <ShowXValues>true</ShowXValues>
      <Fonts>
       <TitleFont>
@@ -20311,7 +20167,7 @@ port2base=control[1:3];implementation_end;
      <XAxes>
       <Axis>
        <Minimum>0</Minimum>
-       <Maximum>8.44390148147937</Maximum>
+       <Maximum>40</Maximum>
        <Linear>true</Linear>
        <Scaling>3</Scaling>
        <Label>time</Label>
@@ -20319,60 +20175,60 @@ port2base=control[1:3];implementation_end;
      </XAxes>
      <YAxes>
       <Axis>
-       <Minimum>-120</Minimum>
-       <Maximum>80</Maximum>
+       <Minimum>-5</Minimum>
+       <Maximum>5</Maximum>
        <Linear>true</Linear>
        <Scaling>1</Scaling>
-       <Label>interaction_control\SignalMonitor\plot[1]</Label>
+       <Label></Label>
       </Axis>
       <Axis>
        <Minimum>0</Minimum>
        <Maximum>10</Maximum>
        <Linear>true</Linear>
        <Scaling>1</Scaling>
-       <Label>interaction_control\SignalMonitor\plot[2]</Label>
+       <Label>interaction_control\JointSoftLimits\state[2]</Label>
       </Axis>
       <Axis>
        <Minimum>0</Minimum>
        <Maximum>10</Maximum>
        <Linear>true</Linear>
        <Scaling>1</Scaling>
-       <Label>interaction_control\SignalMonitor\plot[3]</Label>
+       <Label>interaction_control\JointSoftLimits\state[3]</Label>
       </Axis>
       <Axis>
        <Minimum>0</Minimum>
        <Maximum>10</Maximum>
        <Linear>true</Linear>
        <Scaling>1</Scaling>
-       <Label>interaction_control\SignalMonitor\plot[4]</Label>
+       <Label>interaction_control\JointSoftLimits\state[4]</Label>
       </Axis>
       <Axis>
        <Minimum>0</Minimum>
        <Maximum>10</Maximum>
        <Linear>true</Linear>
        <Scaling>1</Scaling>
-       <Label>interaction_control\SignalMonitor\plot[5]</Label>
+       <Label>interaction_control\JointSoftLimits\state[5]</Label>
       </Axis>
       <Axis>
        <Minimum>0</Minimum>
        <Maximum>10</Maximum>
        <Linear>true</Linear>
        <Scaling>1</Scaling>
-       <Label>interaction_control\SignalMonitor\plot[6]</Label>
+       <Label>interaction_control\JointSoftLimits\state[6]</Label>
       </Axis>
       <Axis>
        <Minimum>0</Minimum>
        <Maximum>10</Maximum>
        <Linear>true</Linear>
        <Scaling>1</Scaling>
-       <Label>interaction_control\SignalMonitor\plot[7]</Label>
+       <Label>interaction_control\JointSoftLimits\state[7]</Label>
       </Axis>
       <Axis>
        <Minimum>0</Minimum>
        <Maximum>10</Maximum>
        <Linear>true</Linear>
        <Scaling>1</Scaling>
-       <Label>interaction_control\SignalMonitor\plot[8]</Label>
+       <Label>interaction_control\JointSoftLimits\state[8]</Label>
       </Axis>
      </YAxes>
      <ZAxes>
@@ -20393,7 +20249,7 @@ port2base=control[1:3];implementation_end;
        </XCurveData>
        <YCurveData>
         <ShowUnit>true</ShowUnit>
-        <VarName>interaction_control\SignalMonitor\plot[1]</VarName>
+        <VarName>interaction_control\JointSoftLimits\state[1]</VarName>
        </YCurveData>
       </Curve>
       <Curve>
@@ -20411,7 +20267,7 @@ port2base=control[1:3];implementation_end;
        </XCurveData>
        <YCurveData>
         <ShowUnit>true</ShowUnit>
-        <VarName>interaction_control\SignalMonitor\plot[2]</VarName>
+        <VarName>interaction_control\JointSoftLimits\state[2]</VarName>
        </YCurveData>
       </Curve>
       <Curve>
@@ -20429,7 +20285,7 @@ port2base=control[1:3];implementation_end;
        </XCurveData>
        <YCurveData>
         <ShowUnit>true</ShowUnit>
-        <VarName>interaction_control\SignalMonitor\plot[3]</VarName>
+        <VarName>interaction_control\JointSoftLimits\state[3]</VarName>
        </YCurveData>
       </Curve>
       <Curve>
@@ -20447,7 +20303,7 @@ port2base=control[1:3];implementation_end;
        </XCurveData>
        <YCurveData>
         <ShowUnit>true</ShowUnit>
-        <VarName>interaction_control\SignalMonitor\plot[4]</VarName>
+        <VarName>interaction_control\JointSoftLimits\state[4]</VarName>
        </YCurveData>
       </Curve>
       <Curve>
@@ -20465,7 +20321,7 @@ port2base=control[1:3];implementation_end;
        </XCurveData>
        <YCurveData>
         <ShowUnit>true</ShowUnit>
-        <VarName>interaction_control\SignalMonitor\plot[5]</VarName>
+        <VarName>interaction_control\JointSoftLimits\state[5]</VarName>
        </YCurveData>
       </Curve>
       <Curve>
@@ -20483,7 +20339,7 @@ port2base=control[1:3];implementation_end;
        </XCurveData>
        <YCurveData>
         <ShowUnit>true</ShowUnit>
-        <VarName>interaction_control\SignalMonitor\plot[6]</VarName>
+        <VarName>interaction_control\JointSoftLimits\state[6]</VarName>
        </YCurveData>
       </Curve>
       <Curve>
@@ -20501,7 +20357,7 @@ port2base=control[1:3];implementation_end;
        </XCurveData>
        <YCurveData>
         <ShowUnit>true</ShowUnit>
-        <VarName>interaction_control\SignalMonitor\plot[7]</VarName>
+        <VarName>interaction_control\JointSoftLimits\state[7]</VarName>
        </YCurveData>
       </Curve>
       <Curve>
@@ -20519,7 +20375,7 @@ port2base=control[1:3];implementation_end;
        </XCurveData>
        <YCurveData>
         <ShowUnit>true</ShowUnit>
-        <VarName>interaction_control\SignalMonitor\plot[8]</VarName>
+        <VarName>interaction_control\JointSoftLimits\state[8]</VarName>
        </YCurveData>
       </Curve>
      </Curves>
@@ -20573,16 +20429,16 @@ port2base=control[1:3];implementation_end;
    </Plots>
    <WindowRectangles virtualDesktopWidth="1680" virtualDesktopHeight="1028">
      <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1028">
-0.2 0.0953307 1 1
+0.202381 0.020428 0.47619 0.898833
      </WindowRectangle>
      <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1028">
-0.6875 0.0214008 0.979167 0.320039
+0.336905 0.25 1.13631 1.15564
      </WindowRectangle>
      <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1028">
-0.6 0.448444 0.979167 0.964981
+0.608333 0.0671206 0.9875 0.58463
      </WindowRectangle>
      <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1028">
-0.0315476 0.269455 0.596429 0.75
+0.0880952 0.121595 0.653571 0.604086
      </WindowRectangle>
    </WindowRectangles>
   </PlotSpecs>
@@ -20684,7 +20540,7 @@ port2base=control[1:3];implementation_end;
      <UseFixedStepSize>false</UseFixedStepSize>
      <FixedStepSize>0</FixedStepSize>
     </IntegrationMethod>
-    <SelectedIntegrationMethod>4</SelectedIntegrationMethod>
+    <SelectedIntegrationMethod>8</SelectedIntegrationMethod>
    </IntegrationMethods>
   </RunSpecs>
   <MultipleRun>
