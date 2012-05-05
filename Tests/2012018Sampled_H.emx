@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document>
+  <Model version="4.1" build="4.1.2.2">
+    <Sidops>
+<![CDATA[model 128 184 description '<Description>
+   <Version>4.1</Version>
+<IsMainModel>0</IsMainModel>
+ <KeepParameterValues>False</KeepParameterValues>
+   <LibraryPath>Z:\Users\yury\workspaces\Ubuntu_shared\ut_git\20SimModels\Tests\2012018Sampled_H.emx</LibraryPath>
+  <TimeStamp>2012-1-18 14:40:45</TimeStamp>
+</Description>'; type Mainmodel end; implementation bg  submodels  end;  connections  end; implementation_end;]]>
+    </Sidops>
+  </Model>
+</Document>
