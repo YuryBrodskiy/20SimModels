@@ -6,8 +6,8 @@
    <Version>4.1</Version>
 <IsMainModel>0</IsMainModel>
  <KeepParameterValues>False</KeepParameterValues>
-   <LibraryPath>Z:\Users\yury\workspaces\20SimModels\Automatica\haptic_master_simple.emx</LibraryPath>
-  <TimeStamp>2012-5-10 12:39:58</TimeStamp>
+   <LibraryPath>Z:\home\youbot\DEV\20SimModels\Automatica\haptic_master_simple.emx</LibraryPath>
+  <TimeStamp>2012-5-10 14:09:15</TimeStamp>
 </Description>';
  type Mainmodel
  end;
@@ -28,7 +28,7 @@
     end;
     implementation eq
 equations
-port1=eye(4);implementation_end;
+port1=0;//eye(4);implementation_end;
    Joystick 328 216
     description '<Description>
  <Version>4.0</Version>
@@ -220,10 +220,11 @@ equations
 	else
 		if input[4,4]==1 then
 			initialized=true;
+			output = input;
+		else
 			output=initial_value;
 		end;
-	end;
-    implementation_end;
+	end;implementation_end;
       Initializer1 576 104
        description '<Description>
  <Version>4.0</Version>
@@ -255,10 +256,11 @@ equations
 	else
 		if input[4,4]==1 then
 			initialized=true;
+			output = input;
+		else
 			output=initial_value;
 		end;
-	end;
-    implementation_end;
+	end;implementation_end;
       JoyRate 536 200
        description '<Description>
  <Version>4.0</Version>
@@ -305,12 +307,12 @@ equations
 	output = inverseH(input);
      implementation_end;
       plug Hout0 400 64;
-      plug Hytip0 320 72;
       plug Hmint 616 104;
       plug Hm0 640 152;
       plug JoyTwist 624 200;
       plug Htip0 400 312;
       plug effort 424 352;
+      plug Hytip0 320 72;
       Rate_control 472 256
        description '<Description>
  <Version>4.0</Version>
@@ -516,15 +518,18 @@ equations
      end;
      connections
       CartesianSpaceStiffness1\effort -> effort;
+      JoyTwist -> JoyRate\Twist;
+      JoyRate\Hjoy0 -> Submodel3\Input1;
       Submodel3\Output -> Splitter2\input;
+      Rate_control\Houtput -> Submodel3\Input2;
       Splitter2\output -> Hm0 472 151.5;
       Splitter2\output -> Submodel1\Input1;
       Initializer1\output -> Submodel1\Input2;
       Submodel1\Output -> Splitter4\input;
       Splitter1\output -> Submodel2\Input2;
       Submodel2\Output -> Hout0;
-      Negate\output -> Submodel4\Input1;
       Initializer\output -> Submodel4\Input2;
+      Negate\output -> Submodel4\Input1;
       Hytip0 -> Initializer\input;
       Submodel4\Output -> CartesianSpaceStiffness1\Htip0 320 312;
       Hmint -> Initializer1\input;
@@ -532,9 +537,6 @@ equations
       Splitter4\output -> Negate\input;
       Splitter4\output -> Submodel2\Input1;
       Splitter1\output -> Rate_control\Hinput;
-      JoyTwist -> JoyRate\Twist;
-      JoyRate\Hjoy0 -> Submodel3\Input1;
-      Rate_control\Houtput -> Submodel3\Input2;
      end;
     implementation_end;
    YouBot 168 272
@@ -557,7 +559,7 @@ equations
       text 'K' 168 272 color 16711680 16 bold;
     end;
     implementation eq
-parameters
+/*parameters
 	real initial_value[4,4] = [1,0,0,0;0,1,0,0;0,0,1,0;0,0,0,1];		// gain
 variables
 	boolean initialized;
@@ -569,10 +571,13 @@ equations
 	else
 		if input[4,4]==1 then
 			initialized=true;
+			output = input;
+		else
 			output=initial_value;
 		end;
-	end;
-    implementation_end;
+	end;*/
+equations
+output=input;implementation_end;
   end;
   connections
    Master_haptic\effort -> Mass_model\W 264 368 424 368;
@@ -596,6 +601,8 @@ equations
 <ExpData>
   <VersionNumber>4.1</VersionNumber>
   <ModelProperties>
+    <ModelProperty section="CCodeDialog" entry="SubmodelName" value="YouBot"/>
+    <ModelProperty section="CCodeDialog" entry="TargetName" value="Orocos Component"/>
   </ModelProperties>
   <Variables>
    <Parameters>
@@ -1731,7 +1738,6 @@ equations
       </Childs>
       <FrontPlane>0.01</FrontPlane>
       <BackPlane>100</BackPlane>
-      <AutoFrontBack>true</AutoFrontBack>
       <Field>0.00392699081698724</Field>
       <Fieldy>45</Fieldy>
       <PlaneLeft>-10</PlaneLeft>
@@ -1782,7 +1788,6 @@ equations
       </Childs>
       <FrontPlane>0.01</FrontPlane>
       <BackPlane>100</BackPlane>
-      <AutoFrontBack>true</AutoFrontBack>
       <Field>10</Field>
       <Fieldy>45</Fieldy>
       <PlaneLeft>-10</PlaneLeft>
@@ -1833,7 +1838,6 @@ equations
       </Childs>
       <FrontPlane>0.01</FrontPlane>
       <BackPlane>100</BackPlane>
-      <AutoFrontBack>true</AutoFrontBack>
       <Field>10</Field>
       <Fieldy>45</Fieldy>
       <PlaneLeft>-10</PlaneLeft>
@@ -1884,7 +1888,6 @@ equations
       </Childs>
       <FrontPlane>0.01</FrontPlane>
       <BackPlane>100</BackPlane>
-      <AutoFrontBack>true</AutoFrontBack>
       <Field>10</Field>
       <Fieldy>45</Fieldy>
       <PlaneLeft>-10</PlaneLeft>
@@ -1999,44 +2002,44 @@ equations
       <Position>
        <X>
         <VariableName>Mass_model\Hpos0[1,4]</VariableName>
-        <Value>-0.174420399308486</Value>
+        <Value>0.0659246260059107</Value>
        </X>
        <Y>
         <VariableName>Mass_model\Hpos0[2,4]</VariableName>
-        <Value>0.174420399308487</Value>
+        <Value>-0.0659246260059101</Value>
        </Y>
        <Z>
         <VariableName>Mass_model\Hpos0[3,4]</VariableName>
-        <Value>-0.174420399308487</Value>
+        <Value>0.0659246260059101</Value>
        </Z>
       </Position>
       <Orientation>
        <ZAxis>
         <X>
          <VariableName>Mass_model\Hpos0[1,3]</VariableName>
-         <Value>0.282619513449905</Value>
+         <Value>0.895648987591683</Value>
         </X>
         <Y>
          <VariableName>Mass_model\Hpos0[2,3]</VariableName>
-         <Value>0.216987109664802</Value>
+         <Value>0.25796020935491</Value>
         </Y>
         <Z>
          <VariableName>Mass_model\Hpos0[3,3]</VariableName>
-         <Value>0.93436759621503</Value>
+         <Value>0.362311221763229</Value>
         </Z>
        </ZAxis>
        <YAxis>
         <X>
          <VariableName>Mass_model\Hpos0[1,2]</VariableName>
-         <Value>0.21698710966484</Value>
+         <Value>0.257960209354912</Value>
         </X>
         <Y>
          <VariableName>Mass_model\Hpos0[2,2]</VariableName>
-         <Value>0.934367596215059</Value>
+         <Value>0.36231122176323</Value>
         </Y>
         <Z>
          <VariableName>Mass_model\Hpos0[3,2]</VariableName>
-         <Value>-0.28261951344978</Value>
+         <Value>-0.895648987591682</Value>
         </Z>
        </YAxis>
        <OrientationType>Matrix</OrientationType>
@@ -2067,44 +2070,44 @@ equations
       <Position>
        <X>
         <VariableName>YouBot\input[1,4]</VariableName>
-        <Value>-0.174420399308486</Value>
+        <Value>0.0659246260059107</Value>
        </X>
        <Y>
         <VariableName>YouBot\input[2,4]</VariableName>
-        <Value>0.174420399308487</Value>
+        <Value>-0.0659246260059101</Value>
        </Y>
        <Z>
         <VariableName>YouBot\input[3,4]</VariableName>
-        <Value>-0.174420399308487</Value>
+        <Value>0.0659246260059101</Value>
        </Z>
       </Position>
       <Orientation>
        <ZAxis>
         <X>
          <VariableName>YouBot\input[1,3]</VariableName>
-         <Value>0.282619513449905</Value>
+         <Value>0.895648987591683</Value>
         </X>
         <Y>
          <VariableName>YouBot\input[2,3]</VariableName>
-         <Value>0.216987109664802</Value>
+         <Value>0.25796020935491</Value>
         </Y>
         <Z>
          <VariableName>YouBot\input[3,3]</VariableName>
-         <Value>0.93436759621503</Value>
+         <Value>0.362311221763229</Value>
         </Z>
        </ZAxis>
        <YAxis>
         <X>
          <VariableName>YouBot\input[1,2]</VariableName>
-         <Value>0.21698710966484</Value>
+         <Value>0.257960209354912</Value>
         </X>
         <Y>
          <VariableName>YouBot\input[2,2]</VariableName>
-         <Value>0.934367596215059</Value>
+         <Value>0.36231122176323</Value>
         </Y>
         <Z>
          <VariableName>YouBot\input[3,2]</VariableName>
-         <Value>-0.28261951344978</Value>
+         <Value>-0.895648987591682</Value>
         </Z>
        </YAxis>
        <OrientationType>Matrix</OrientationType>
@@ -2471,15 +2474,15 @@ equations
      </StripChartPlots>
     </Plot>
    </Plots>
-   <WindowRectangles virtualDesktopWidth="1680" virtualDesktopHeight="1028">
-     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1028">
-0.00238095 0.0214008 0.423214 0.773346
+   <WindowRectangles virtualDesktopWidth="1680" virtualDesktopHeight="1050">
+     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1050">
+0.00238095 0.0495238 0.423214 0.784762
      </WindowRectangle>
-     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1028">
-0.0625 0.0214008 0.354167 0.314202
+     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1050">
+0.0625 0.0495238 0.353571 0.335238
      </WindowRectangle>
-     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1028">
-0.458929 0.020428 0.989881 1
+     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1050">
+0.458929 0.0495238 0.989881 0.975238
      </WindowRectangle>
    </WindowRectangles>
   </PlotSpecs>
@@ -2493,7 +2496,6 @@ equations
     <EventEpsilon>1e-006</EventEpsilon>
     <AlgebraicTolerance>1e-007</AlgebraicTolerance>
     <SteadyStateAnalysis>false</SteadyStateAnalysis>
-    <UpdateHoldInstructions>true</UpdateHoldInstructions>
    </SimulatorSettings>
    <IntegrationMethods>
     <IntegrationMethod>
