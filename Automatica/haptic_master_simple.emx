@@ -1,1137 +1,527 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Document>
  <Model version="4.1" build="4.1.4.1">
-  <Sidops><![CDATA[model 128 184
- description '<Description>
+    <Sidops>
+<![CDATA[model 128 184 description '<Description>
    <Version>4.1</Version>
 <IsMainModel>0</IsMainModel>
  <KeepParameterValues>False</KeepParameterValues>
    <LibraryPath>Z:\home\youbot\DEV\20SimModels\Automatica\haptic_master_simple.emx</LibraryPath>
-  <TimeStamp>2012-5-10 14:09:15</TimeStamp>
-</Description>';
- type Mainmodel
- end;
- implementation bg
-  submodels
-   Interactive_marker 248 216
-    description '<Description>
- <Version>4.0</Version>
- <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>
- <TimeStamp>2007-10-31 11:32:54</TimeStamp>
- <IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
- <AllowLibraryUpdate>True</AllowLibraryUpdate>
-</Description>';
-    type Submodel
-     ports
-      signal out port1 [4,4];
-    end;
-    implementation eq
-equations
-port1=0;//eye(4);implementation_end;
-   Joystick 328 216
-    description '<Description>
- <Version>4.0</Version>
- <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>
- <TimeStamp>2007-10-31 11:32:54</TimeStamp>
- <IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
- <AllowLibraryUpdate>True</AllowLibraryUpdate>
-</Description>';
-    type Submodel
-     ports
-      signal out port1 [6,1];
-    end;
-    implementation eq
-equations
-port1=[0;0;0;0;0;0];implementation_end;
-   Mass_model 424 312
-    description '<Description>
- <Version>4.0</Version>
- <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>
- <TimeStamp>2007-10-31 11:32:54</TimeStamp>
- <IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
- <AllowLibraryUpdate>True</AllowLibraryUpdate>
-</Description>';
-    type Submodel
-     ports
-      signal out Hpos0 [4,4];
-      signal in W [6,1];
-    end;
-    implementation eq
-parameters
-	real I[6]=[1,1,1,1,1,1];
-variables
-	real T[6];
-	real P[6];
-	real dotH[4,4],H[4,4];
-	real init[4,4];
-initialequations
-	init=eye(4);
-equations
-	P=int(W)+[1;-1;1;1;-1;1];
-	T=inverse(diag(I))*P;
-	dotH=tilde(T)*H;
-	H=int(dotH,init);
-	Hpos0=H;
-implementation_end;
-   Master_haptic 264 312
-    description '<Description>
- <Version>4.1</Version>
- <IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
- <AllowLibraryUpdate>True</AllowLibraryUpdate>
-</Description>';
-    type Submodel
-     ports
-      signal in Htip0 [4,4];
-      signal out effort [6,1];
-      signal in JoyTwist [6,1];
-      signal out Hm0 [4,4];
-      signal out Hout0 [4,4];
-      signal in Hytip0 [4,4];
-      signal in Hmint [4,4];
-    end;
-    implementation bg
-     submodels
-      CartesianSpaceStiffness1 264 328
-       description '<Description>
- <Version>4.0</Version>
- <IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
- <LibraryPath>Signal\Control\PID Control\Continuous\P.emx</LibraryPath>
- <TimeStamp>2008-1-17 10:48:8</TimeStamp>
- <AllowLibraryUpdate>True</AllowLibraryUpdate>
-</Description>';
-       type P
-        ports
-         signal out effort [6,1];
-         signal in Htip0 [4,4];
-       end;
-       icon bg
-        figures
-         rectangle 232 296 296 360 fill 15132390;
-         text 'Cartesian
-Space 
-Stiffness' 264 330 color 16711680 15;
-        terminals
-         effort 296 352 fixed;
-         Htip0 296 312 fixed;
-       end;
-       implementation eq
-parameters
- 	//boolean vp_equal_to_tip=true;
-	real HtipCC[4,4]= [
-			1, 0, 0, 0;
-			0, 1, 0, 0;
-			0, 0, 1, 0;
-			0, 0, 0, 1]; // latex notation H^{tip}_{cc}
-	real Hvp0[4,4]= [ 1, 0, 0, 0;
-					  	  0, 1, 0, 0;
-					     0, 0, 1, 0 ;
-					     0, 0, 0, 1 ]; // latex notation H^{tip}_{cc}
-	real H1_0_initial[4,4]=[ 1, 0, 0, 0;
-					  	  			0, 1, 0, 0;
-					     			0, 0, 1, 0 ;
-					     			0, 0, 0, 1 ]; // latex notation H^{tip}_{cc}
-
-	real cart_stiffness[9,1]= [10;10;10;0;0;0;0;0;0]; // latex notation H^{tip}_{cc}
-variables
-	real Kt[3];
-	real Kr[3];
-	real Kc[3];
-
-	real Kcc[ 6, 6 ];
-	real Ktip[6,6];
-	real T1_00 [4,4], H_dot1_0[4,4],	H1_0[4,4], H1_00[4,4];
-	real costiffness1[ 3, 3 ], costiffness2[ 3, 3 ], costiffness3[ 3, 3 ],
-		dummy1[ 3, 3 ], dummy2[ 3, 3 ], dummy3[ 3, 3 ], dummy4[ 3, 3 ], dummy5[ 3, 3 ],
-		pose21[ 4, 4 ], skew21[ 3, 3 ], orientation21[ 3, 3 ];
-	real Hvp0_temp[4,4];
-	boolean vp_equal_to_tip;
-initialequations
-	Hvp0_temp=eye(4);
-	vp_equal_to_tip=true;
-
-equations
-
-	Kt = cart_stiffness[1:3];
-	Kr = cart_stiffness[4:6];
-	Kc = cart_stiffness[7:9];
-	H1_0 =inverseH(Hvp0_temp)*Htip0;// inverseH(Htip0)*Hvp0_temp;// =H0tip*Hvp0 int (H_dot1_0, H1_0_initial);
-	
-	Kcc[1:3,1:3] = diag(Kr);
-	Kcc[1:3,4:6] = diag(Kc);
-	Kcc[4:6,1:3] = transpose(diag(Kc)); // is it correct of it should be negative
-	Kcc[4:6,4:6] = diag(Kt); 
-	Ktip=transpose(Adjoint(HtipCC))*Kcc*Adjoint(HtipCC);//latex noation K_{tip}=(Ad_{H^{tip}_{cc}})^{T}*K_{cc}*Ad_{H^{tip}_{cc}}
-	dummy1 = Ktip[ 1 : 3, 1 : 3 ];
-	dummy2 = Ktip[ 1 : 3, 4 : 6 ];
-	dummy3 = Ktip[ 4 : 6, 4 : 6 ];
-	costiffness1 = 0.5 * trace( dummy1 ) * eye( 3 ) - dummy1;
-	costiffness2 = 0.5 * trace( dummy2 ) * eye( 3 ) - dummy2;
-	costiffness3 = 0.5 * trace( dummy3 ) * eye( 3 ) - dummy3;
-
-	"create T_tilde from the twist T1_00 of body 1 in coordinates of body 0 with respect to body 0"
-//	T1_00 = tilde (p.f);
-	
-	"create the H_dot matrix for calculation of the transformation matrix H from body 1 to body 0"
-//	H_dot1_0 = T1_00 * H1_0;
-	
-
-	pose21 = H1_0;
-	skew21 = skew( pose21[ 1 : 3, 4 ] );
-	orientation21 = pose21[ 1 : 3, 1 : 3 ];
-
-	dummy4 = 2 * antisym( costiffness1 * orientation21 ) + antisym( costiffness3 * transpose( orientation21 ) * skew21 * skew21 * orientation21 ) + 2 * antisym( costiffness2 * skew21 * orientation21 );
-	dummy5 = transpose( orientation21 ) * antisym( costiffness3 * skew21 ) * orientation21 + antisym( costiffness3 * transpose( orientation21 ) * skew21 * orientation21 ) + 2 * antisym( costiffness2 * orientation21 );
-	effort= -transpose(Adjoint(inverseH(Htip0)))* [ dummy4[ 3, 2 ]; dummy4[ 1, 3 ]; dummy4[ 2, 1 ]; dummy5[ 3, 2 ]; dummy5[ 1, 3 ]; dummy5[ 2, 1 ] ];
-	
-implementation_end;
-      Initializer 320 104
-       description '<Description>
- <Version>4.0</Version>
- <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>
- <TimeStamp>2007-10-31 11:32:54</TimeStamp>
- <IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
- <AllowLibraryUpdate>True</AllowLibraryUpdate>
-</Description>';
-       type Submodel
-        ports
-         signal in input [4,4];
-         signal out output [4,4];
-       end;
-       icon bg
-        figures
-         rectangle 289 101 351 107 fill 14013909;
-       end;
-       implementation eq
-parameters
-	real initial_value[4,4] = [1,0,0,0;0,1,0,0;0,0,1,0;0,0,0,1];		// gain
-variables
-	boolean initialized;
-initialequations
-	initialized=false;
-equations
-	if initialized then
-		output = input;
-	else
-		if input[4,4]==1 then
-			initialized=true;
-			output = input;
-		else
-			output=initial_value;
-		end;
-	end;implementation_end;
-      Initializer1 576 104
-       description '<Description>
- <Version>4.0</Version>
- <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>
- <TimeStamp>2007-10-31 11:32:54</TimeStamp>
- <IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
- <AllowLibraryUpdate>True</AllowLibraryUpdate>
-</Description>';
-       type Submodel
-        ports
-         signal in input [4,4];
-         signal out output [4,4];
-       end;
-       icon bg
-        figures
-         rectangle 573 73 579 135 fill 14013909;
-       end;
-       implementation eq
-parameters
-	real initial_value[4,4] = [1,0,0,0;0,1,0,0;0,0,1,0;0,0,0,1];		// gain
-variables
-	boolean initialized;
-initialequations
-	initialized=false;
-equations
-	if initialized then
-		output = input;
-	else
-		if input[4,4]==1 then
-			initialized=true;
-			output = input;
-		else
-			output=initial_value;
-		end;
-	end;implementation_end;
-      JoyRate 536 200
-       description '<Description>
- <Version>4.0</Version>
- <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>
- <TimeStamp>2007-10-31 11:32:54</TimeStamp>
- <IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
- <AllowLibraryUpdate>True</AllowLibraryUpdate>
-</Description>';
-       type Submodel
-        ports
-         signal in Twist [6,1];
-         signal out Hjoy0 [4,4];
-       end;
-       implementation eq
-variables
-	real H[4,4];
-	real dotH[4,4];
-	real init[4,4];
-initialequations
-	H=eye(4);
-	init=eye(4);
-equations
-	dotH=tilde(Twist)*H;
-	H=int(dotH,init);
-	Hjoy0=H;implementation_end;
-      Negate 440 160
-       description '<Description><Version>4.0</Version><IsMainModel>1</IsMainModel><KeepParameterValues>False</KeepParameterValues>
-   <LibraryPath>Signal\Block Diagram\Negate.emx</LibraryPath>
-  <TimeStamp>2007-9-26 12:14:11</TimeStamp>
-</Description>';
-       type Negate
-        ports
-         signal in input [4,4];
-         signal out output [4,4];
-       end;
-       icon bg bottom
-        figures
-         rectangle 424 144 456 176 fill 15132390;
-         text '-1' 440 160 color 16711680 16 bold;
-       end;
-       implementation eq
-equations
-	output = inverseH(input);
-     implementation_end;
-      plug Hout0 400 64;
-      plug Hmint 616 104;
-      plug Hm0 640 152;
-      plug JoyTwist 624 200;
-      plug Htip0 400 312;
-      plug effort 424 352;
-      plug Hytip0 320 72;
-      Rate_control 472 256
-       description '<Description>
- <Version>4.0</Version>
- <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>
- <TimeStamp>2007-10-31 11:32:54</TimeStamp>
- <IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
- <AllowLibraryUpdate>True</AllowLibraryUpdate>
-</Description>';
-       type Submodel
-        ports
-         signal in Hinput [4,4];
-         signal out Houtput [4,4];
-       end;
-       implementation eq
-parameters
-	real R[3]=[5;5;5]; //ellipsoid dimentions
-	real E0[3]= [0;0;0];//ellipsoid offset
-	real speed=0.1; //rate multiplier
-variables
-	real H[4,4];
-	real dH[4,4];
-	real dotH[4,4];
-	real T[6];
-	real init[4,4];
-	real snorm;
-	real Rnorm;
-	real enorm;
-initialequations
-	H=eye(4);
-	init=eye(4);
-equations
-	snorm=norm(Hinput[1:3,4]);
-	enorm=norm((Hinput[1:3,4]-E0)./R);
-	Rnorm=norm(R);
-	if enorm>1 then
-		T[4:6]=Hinput[1:3,4]*speed;
-		T[1:3]=0;
-	else
-		T=0;
-	end;
-	dotH=tilde(T)*H;
-	H=int(dotH,init);
-	Houtput=H;
-implementation_end;
-      Splitter1 400 256
-       description '<Description><Version>4.0</Version>
-   <LibraryPath>Signal\Block Diagram\Splitter.emx</LibraryPath>
-  <TimeStamp>2008-01-17 11:28:29</TimeStamp>
-<IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
-</Description>';
-       knot Splitter
-        ports
-         signal knot duplicatable out output [4,4];
-         signal knot in input [4,4];
-       end;
-       icon bg ellipse
-        figures
-         ellipse 396.8 252.8 403.2 259.2 color -1 fill 0;
-         ellipse 395.7 251.7 404.3 260.3 color -1;
-        terminals
-         input 400 256 fixed;
-       end;
-       implementation eq
-equations
-    collect (output) = input;
-implementation_end;
-      Splitter2 472 152
-       description '<Description><Version>4.0</Version>
-   <LibraryPath>Signal\Block Diagram\Splitter.emx</LibraryPath>
-  <TimeStamp>2008-01-17 11:28:29</TimeStamp>
-<IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
-</Description>';
-       knot Splitter
-        ports
-         signal knot duplicatable out output [4,4];
-         signal knot in input [4,4];
-       end;
-       icon bg ellipse
-        figures
-         ellipse 468.8 148.8 475.2 155.2 color -1 fill 0;
-         ellipse 467.7 147.7 476.3 156.3 color -1;
-        terminals
-         input 472 152 fixed;
-       end;
-       implementation eq
-equations
-    collect (output) = input;
-implementation_end;
-      Splitter4 440 104
-       description '<Description><Version>4.0</Version>
-   <LibraryPath>Signal\Block Diagram\Splitter.emx</LibraryPath>
-  <TimeStamp>2008-01-17 11:28:29</TimeStamp>
-<IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
-</Description>';
-       knot Splitter
-        ports
-         signal knot duplicatable out output [4,4];
-         signal knot in input [4,4];
-       end;
-       icon bg ellipse
-        figures
-         ellipse 436.8 100.8 443.2 107.2 color -1 fill 0;
-         ellipse 435.7 99.7 444.3 108.3 color -1;
-        terminals
-         input 440 104 fixed;
-       end;
-       implementation eq
-equations
-    collect (output) = input;
-implementation_end;
-      Submodel1 472 104
-       description '<Description>
- <Version>4.0</Version>
-   <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>
-  <TimeStamp>2007-10-31 11:32:54</TimeStamp>
-<IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
-</Description>';
-       type Submodel
-        ports
-         signal in Input1 [4,4];
-         signal in Input2 [4,4];
-         signal out Output [4,4];
-       end;
-       icon bg ellipse
-        figures
-         ellipse 464 97 480 113 fill 16777215;
-         text '+' 472 104 20;
-       end;
-       implementation eq
-equations
-	Output=Input1*Input2;implementation_end;
-      Submodel2 400 104
-       description '<Description>
- <Version>4.0</Version>
-   <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>
-  <TimeStamp>2007-10-31 11:32:54</TimeStamp>
-<IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
-</Description>';
-       type Submodel
-        ports
-         signal in Input1 [4,4];
-         signal in Input2 [4,4];
-         signal out Output [4,4];
-       end;
-       icon bg ellipse
-        figures
-         ellipse 392 97 408 113 fill 16777215;
-         text '+' 400 104 20;
-       end;
-       implementation eq
-equations
-	Output=Input1*Input2;implementation_end;
-      Submodel3 472 200
-       description '<Description>
- <Version>4.0</Version>
-   <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>
-  <TimeStamp>2007-10-31 11:32:54</TimeStamp>
-<IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
-</Description>';
-       type Submodel
-        ports
-         signal in Input1 [4,4];
-         signal in Input2 [4,4];
-         signal out Output [4,4];
-       end;
-       icon bg ellipse
-        figures
-         ellipse 464 193 480 209 fill 16777215;
-         text '+' 472 200 20;
-       end;
-       implementation eq
-equations
-	Output=Input1*Input2;implementation_end;
-      Submodel4 320 160
-       description '<Description>
- <Version>4.0</Version>
-   <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>
-  <TimeStamp>2007-10-31 11:32:54</TimeStamp>
-<IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
-</Description>';
-       type Submodel
-        ports
-         signal in Input1 [4,4];
-         signal in Input2 [4,4];
-         signal out Output [4,4];
-       end;
-       icon bg ellipse
-        figures
-         ellipse 312 153 328 169 fill 16777215;
-         text '+' 320 160 20;
-       end;
-       implementation eq
-equations
-	Output=Input1*Input2;implementation_end;
-     end;
-     connections
-      CartesianSpaceStiffness1\effort -> effort;
-      JoyTwist -> JoyRate\Twist;
-      JoyRate\Hjoy0 -> Submodel3\Input1;
-      Submodel3\Output -> Splitter2\input;
-      Rate_control\Houtput -> Submodel3\Input2;
-      Splitter2\output -> Hm0 472 151.5;
-      Splitter2\output -> Submodel1\Input1;
-      Initializer1\output -> Submodel1\Input2;
-      Submodel1\Output -> Splitter4\input;
-      Splitter1\output -> Submodel2\Input2;
-      Submodel2\Output -> Hout0;
-      Initializer\output -> Submodel4\Input2;
-      Negate\output -> Submodel4\Input1;
-      Hytip0 -> Initializer\input;
-      Submodel4\Output -> CartesianSpaceStiffness1\Htip0 320 312;
-      Hmint -> Initializer1\input;
-      Htip0 -> Splitter1\input;
-      Splitter4\output -> Negate\input;
-      Splitter4\output -> Submodel2\Input1;
-      Splitter1\output -> Rate_control\Hinput;
-     end;
-    implementation_end;
-   YouBot 168 272
-    description '<Description>
- <Version>4.0</Version>
- <IsMainModel>1</IsMainModel>
- <KeepParameterValues>False</KeepParameterValues>
- <LibraryPath>Signal\Block Diagram\Gain.emx</LibraryPath>
- <TimeStamp>2007-9-26 12:15:12</TimeStamp>
- <AllowLibraryUpdate>True</AllowLibraryUpdate>
-</Description>';
-    type Gain
-     ports
-      signal in input [4,4];
-      signal out output [4,4];
-    end;
-    icon bg bottom
-     figures
-      rectangle 152.1 256 183.9 288 fill 15132390;
-      text 'K' 168 272 color 16711680 16 bold;
-    end;
-    implementation eq
-/*parameters
-	real initial_value[4,4] = [1,0,0,0;0,1,0,0;0,0,1,0;0,0,0,1];		// gain
-variables
-	boolean initialized;
-initialequations
-	initialized=false;
-equations
-	if initialized then
-		output = input;
-	else
-		if input[4,4]==1 then
-			initialized=true;
-			output = input;
-		else
-			output=initial_value;
-		end;
-	end;*/
-equations
-output=input;implementation_end;
-  end;
-  connections
-   Master_haptic\effort -> Mass_model\W 264 368 424 368;
-   Mass_model\Hpos0 -> Master_haptic\Htip0;
-   Master_haptic\JoyTwist <- Joystick\port1;
-   Master_haptic\Hout0 -> YouBot\input 200 272;
-   YouBot\output -> Master_haptic\Hytip0 176 312;
-   Interactive_marker\port1 -> Master_haptic\Hmint;
-  end;
- implementation_end;
-]]>
-</Sidops>
- </Model>
+  <TimeStamp>2012-5-11 13:20:01</TimeStamp>
+</Description>'; type Mainmodel end; implementation bg  submodels   Interactive_marker 248 216    description '<Description> <Version>4.0</Version> <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath> <TimeStamp>2007-10-31 11:32:54</TimeStamp> <IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues> <AllowLibraryUpdate>True</AllowLibraryUpdate></Description>';    type Submodel     ports      signal out port1 [4,4];    end;    implementation eqequationsport1=0;//eye(4);implementation_end;   Joystick 328 216    description '<Description> <Version>4.0</Version> <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath> <TimeStamp>2007-10-31 11:32:54</TimeStamp> <IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues> <AllowLibraryUpdate>True</AllowLibraryUpdate></Description>';    type Submodel     ports      signal out port1 [6,1];    end;    implementation eqequationsport1=[0;0;0;0;0;0];implementation_end;   Mass_model 424 312    description '<Description> <Version>4.0</Version> <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath> <TimeStamp>2007-10-31 11:32:54</TimeStamp> <IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues> <AllowLibraryUpdate>True</AllowLibraryUpdate></Description>';    type Submodel     ports      signal out Hpos0 [4,4];      signal in W [6,1];    end;    implementation eqparameters	real I[6]=[1,1,1,1,1,1];variables	real T[6];	real P[6];	real dotH[4,4],H[4,4];	real init[4,4];initialequations	init=eye(4);equations	P=int(W)+[1;-1;1;1;-1;1];	T=inverse(diag(I))*P;	dotH=tilde(T)*H;	H=int(dotH,init);	Hpos0=H;implementation_end;   Master_haptic 264 312    description '<Description> <Version>4.1</Version> <IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues> <AllowLibraryUpdate>True</AllowLibraryUpdate></Description>';    type Submodel     ports      signal in Htip0 [4,4];      signal out effort [6,1];      signal in JoyTwist [6,1];      signal out Hm0 [4,4];      signal out Hout0 [4,4];      signal in Hytip0 [4,4];      signal in Hmint [4,4];    end;    implementation bg     submodels      CartesianSpaceStiffness1 264 328       description '<Description> <Version>4.0</Version> <IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues> <LibraryPath>Signal\Control\PID Control\Continuous\P.emx</LibraryPath> <TimeStamp>2008-1-17 10:48:8</TimeStamp> <AllowLibraryUpdate>True</AllowLibraryUpdate></Description>';       type P        ports         signal out effort [6,1];         signal in Htip0 [4,4];       end;       icon bg        figures         rectangle 232 296 296 360 fill 15132390;         text 'CartesianSpace Stiffness' 264 330 color 16711680 15;        terminals         effort 296 352 fixed;         Htip0 296 312 fixed;       end;       implementation eqparameters 	//boolean vp_equal_to_tip=true;	real HtipCC[4,4]= [			1, 0, 0, 0;			0, 1, 0, 0;			0, 0, 1, 0;			0, 0, 0, 1]; // latex notation H^{tip}_{cc}	real Hvp0[4,4]= [ 1, 0, 0, 0;					  	  0, 1, 0, 0;					     0, 0, 1, 0 ;					     0, 0, 0, 1 ]; // latex notation H^{tip}_{cc}	real H1_0_initial[4,4]=[ 1, 0, 0, 0;					  	  			0, 1, 0, 0;					     			0, 0, 1, 0 ;					     			0, 0, 0, 1 ]; // latex notation H^{tip}_{cc}	real cart_stiffness[9,1]= [10;10;10;0;0;0;0;0;0]; // latex notation H^{tip}_{cc}variables	real Kt[3];	real Kr[3];	real Kc[3];	real Kcc[ 6, 6 ];	real Ktip[6,6];	real T1_00 [4,4], H_dot1_0[4,4],	H1_0[4,4], H1_00[4,4];	real costiffness1[ 3, 3 ], costiffness2[ 3, 3 ], costiffness3[ 3, 3 ],		dummy1[ 3, 3 ], dummy2[ 3, 3 ], dummy3[ 3, 3 ], dummy4[ 3, 3 ], dummy5[ 3, 3 ],		pose21[ 4, 4 ], skew21[ 3, 3 ], orientation21[ 3, 3 ];	real Hvp0_temp[4,4];	boolean vp_equal_to_tip;initialequations	Hvp0_temp=eye(4);	vp_equal_to_tip=true;equations	Kt = cart_stiffness[1:3];	Kr = cart_stiffness[4:6];	Kc = cart_stiffness[7:9];	H1_0 =inverseH(Hvp0_temp)*Htip0;// inverseH(Htip0)*Hvp0_temp;// =H0tip*Hvp0 int (H_dot1_0, H1_0_initial);		Kcc[1:3,1:3] = diag(Kr);	Kcc[1:3,4:6] = diag(Kc);	Kcc[4:6,1:3] = transpose(diag(Kc)); // is it correct of it should be negative	Kcc[4:6,4:6] = diag(Kt); 	Ktip=transpose(Adjoint(HtipCC))*Kcc*Adjoint(HtipCC);//latex noation K_{tip}=(Ad_{H^{tip}_{cc}})^{T}*K_{cc}*Ad_{H^{tip}_{cc}}	dummy1 = Ktip[ 1 : 3, 1 : 3 ];	dummy2 = Ktip[ 1 : 3, 4 : 6 ];	dummy3 = Ktip[ 4 : 6, 4 : 6 ];	costiffness1 = 0.5 * trace( dummy1 ) * eye( 3 ) - dummy1;	costiffness2 = 0.5 * trace( dummy2 ) * eye( 3 ) - dummy2;	costiffness3 = 0.5 * trace( dummy3 ) * eye( 3 ) - dummy3;	"create T_tilde from the twist T1_00 of body 1 in coordinates of body 0 with respect to body 0"//	T1_00 = tilde (p.f);		"create the H_dot matrix for calculation of the transformation matrix H from body 1 to body 0"//	H_dot1_0 = T1_00 * H1_0;		pose21 = H1_0;	skew21 = skew( pose21[ 1 : 3, 4 ] );	orientation21 = pose21[ 1 : 3, 1 : 3 ];	dummy4 = 2 * antisym( costiffness1 * orientation21 ) + antisym( costiffness3 * transpose( orientation21 ) * skew21 * skew21 * orientation21 ) + 2 * antisym( costiffness2 * skew21 * orientation21 );	dummy5 = transpose( orientation21 ) * antisym( costiffness3 * skew21 ) * orientation21 + antisym( costiffness3 * transpose( orientation21 ) * skew21 * orientation21 ) + 2 * antisym( costiffness2 * orientation21 );	effort= -transpose(Adjoint(inverseH(Htip0)))* [ dummy4[ 3, 2 ]; dummy4[ 1, 3 ]; dummy4[ 2, 1 ]; dummy5[ 3, 2 ]; dummy5[ 1, 3 ]; dummy5[ 2, 1 ] ];	implementation_end;      Initializer 320 104       description '<Description> <Version>4.0</Version> <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath> <TimeStamp>2007-10-31 11:32:54</TimeStamp> <IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues> <AllowLibraryUpdate>True</AllowLibraryUpdate></Description>';       type Submodel        ports         signal in input [4,4];         signal out output [4,4];       end;       icon bg        figures         rectangle 289 101 351 107 fill 14013909;       end;       implementation eqparameters	real initial_value[4,4] = [1,0,0,0;0,1,0,0;0,0,1,0;0,0,0,1];		// gainvariables	boolean initialized;initialequations	initialized=false;equations	if initialized then		output = input;	else		if input[4,4]==1 then			initialized=true;			output = input;		else			output=initial_value;		end;	end;implementation_end;      Initializer1 576 104       description '<Description> <Version>4.0</Version> <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath> <TimeStamp>2007-10-31 11:32:54</TimeStamp> <IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues> <AllowLibraryUpdate>True</AllowLibraryUpdate></Description>';       type Submodel        ports         signal in input [4,4];         signal out output [4,4];       end;       icon bg        figures         rectangle 573 73 579 135 fill 14013909;       end;       implementation eqparameters	real initial_value[4,4] = [1,0,0,0;0,1,0,0;0,0,1,0;0,0,0,1];		// gainvariables	boolean initialized;initialequations	initialized=false;equations	if initialized then		output = input;	else		if input[4,4]==1 then			initialized=true;			output = input;		else			output=initial_value;		end;	end;implementation_end;      JoyRate 536 200       description '<Description> <Version>4.0</Version> <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath> <TimeStamp>2007-10-31 11:32:54</TimeStamp> <IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues> <AllowLibraryUpdate>True</AllowLibraryUpdate></Description>';       type Submodel        ports         signal in Twist [6,1];         signal out Hjoy0 [4,4];       end;       implementation eqvariables	real H[4,4];	real dotH[4,4];	real init[4,4];initialequations	H=eye(4);	init=eye(4);equations	dotH=tilde(Twist)*H;	H=int(dotH,init);	Hjoy0=H;implementation_end;      Negate 440 160       description '<Description><Version>4.0</Version><IsMainModel>1</IsMainModel><KeepParameterValues>False</KeepParameterValues>   <LibraryPath>Signal\Block Diagram\Negate.emx</LibraryPath>  <TimeStamp>2007-9-26 12:14:11</TimeStamp></Description>';       type Negate        ports         signal in input [4,4];         signal out output [4,4];       end;       icon bg bottom        figures         rectangle 424 144 456 176 fill 15132390;         text '-1' 440 160 color 16711680 16 bold;       end;       implementation eqequations	output = inverseH(input);     implementation_end;      plug Hout0 400 64;      plug Hmint 616 104;      plug Hm0 640 152;      plug JoyTwist 624 200;      plug Htip0 400 312;      plug effort 424 352;      plug Hytip0 320 72;      Rate_control 472 256       description '<Description> <Version>4.0</Version> <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath> <TimeStamp>2007-10-31 11:32:54</TimeStamp> <IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues> <AllowLibraryUpdate>True</AllowLibraryUpdate></Description>';       type Submodel        ports         signal in Hinput [4,4];         signal out Houtput [4,4];       end;       implementation eqparameters	real R[3]=[5;5;5]; //ellipsoid dimentions	real E0[3]= [0;0;0];//ellipsoid offset	real speed=0.1; //rate multipliervariables	real H[4,4];	real dH[4,4];	real dotH[4,4];	real T[6];	real init[4,4];	real snorm;	real Rnorm;	real enorm;initialequations	H=eye(4);	init=eye(4);equations	snorm=norm(Hinput[1:3,4]);	enorm=norm((Hinput[1:3,4]-E0)./R);	Rnorm=norm(R);	if enorm>1 then		T[4:6]=Hinput[1:3,4]*speed;		T[1:3]=0;	else		T=0;	end;	dotH=tilde(T)*H;	H=int(dotH,init);	Houtput=H;implementation_end;      Splitter1 400 256       description '<Description><Version>4.0</Version>   <LibraryPath>Signal\Block Diagram\Splitter.emx</LibraryPath>  <TimeStamp>2008-01-17 11:28:29</TimeStamp><IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues></Description>';       knot Splitter        ports         signal knot duplicatable out output [4,4];         signal knot in input [4,4];       end;       icon bg ellipse        figures         ellipse 396.8 252.8 403.2 259.2 color -1 fill 0;         ellipse 395.7 251.7 404.3 260.3 color -1;        terminals         input 400 256 fixed;       end;       implementation eqequations    collect (output) = input;implementation_end;      Splitter2 472 152       description '<Description><Version>4.0</Version>   <LibraryPath>Signal\Block Diagram\Splitter.emx</LibraryPath>  <TimeStamp>2008-01-17 11:28:29</TimeStamp><IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues></Description>';       knot Splitter        ports         signal knot duplicatable out output [4,4];         signal knot in input [4,4];       end;       icon bg ellipse        figures         ellipse 468.8 148.8 475.2 155.2 color -1 fill 0;         ellipse 467.7 147.7 476.3 156.3 color -1;        terminals         input 472 152 fixed;       end;       implementation eqequations    collect (output) = input;implementation_end;      Splitter4 440 104       description '<Description><Version>4.0</Version>   <LibraryPath>Signal\Block Diagram\Splitter.emx</LibraryPath>  <TimeStamp>2008-01-17 11:28:29</TimeStamp><IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues></Description>';       knot Splitter        ports         signal knot duplicatable out output [4,4];         signal knot in input [4,4];       end;       icon bg ellipse        figures         ellipse 436.8 100.8 443.2 107.2 color -1 fill 0;         ellipse 435.7 99.7 444.3 108.3 color -1;        terminals         input 440 104 fixed;       end;       implementation eqequations    collect (output) = input;implementation_end;      Submodel1 472 104       description '<Description> <Version>4.0</Version>   <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>  <TimeStamp>2007-10-31 11:32:54</TimeStamp><IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues></Description>';       type Submodel        ports         signal in Input1 [4,4];         signal in Input2 [4,4];         signal out Output [4,4];       end;       icon bg ellipse        figures         ellipse 464 97 480 113 fill 16777215;         text '+' 472 104 20;       end;       implementation eqequations	Output=Input1*Input2;implementation_end;      Submodel2 400 104       description '<Description> <Version>4.0</Version>   <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>  <TimeStamp>2007-10-31 11:32:54</TimeStamp><IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues></Description>';       type Submodel        ports         signal in Input1 [4,4];         signal in Input2 [4,4];         signal out Output [4,4];       end;       icon bg ellipse        figures         ellipse 392 97 408 113 fill 16777215;         text '+' 400 104 20;       end;       implementation eqequations	Output=Input1*Input2;implementation_end;      Submodel3 472 200       description '<Description> <Version>4.0</Version>   <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>  <TimeStamp>2007-10-31 11:32:54</TimeStamp><IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues></Description>';       type Submodel        ports         signal in Input1 [4,4];         signal in Input2 [4,4];         signal out Output [4,4];       end;       icon bg ellipse        figures         ellipse 464 193 480 209 fill 16777215;         text '+' 472 200 20;       end;       implementation eqequations	Output=Input1*Input2;implementation_end;      Submodel4 320 160       description '<Description> <Version>4.0</Version>   <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>  <TimeStamp>2007-10-31 11:32:54</TimeStamp><IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues></Description>';       type Submodel        ports         signal in Input1 [4,4];         signal in Input2 [4,4];         signal out Output [4,4];       end;       icon bg ellipse        figures         ellipse 312 153 328 169 fill 16777215;         text '+' 320 160 20;       end;       implementation eqequations	Output=Input1*Input2;implementation_end;     end;     connections      CartesianSpaceStiffness1\effort -> effort;      JoyTwist -> JoyRate\Twist;      JoyRate\Hjoy0 -> Submodel3\Input1;      Submodel3\Output -> Splitter2\input;      Rate_control\Houtput -> Submodel3\Input2;      Splitter2\output -> Hm0 472 151.5;      Splitter2\output -> Submodel1\Input1;      Initializer1\output -> Submodel1\Input2;      Submodel1\Output -> Splitter4\input;      Splitter1\output -> Submodel2\Input2;      Submodel2\Output -> Hout0;      Initializer\output -> Submodel4\Input2;      Negate\output -> Submodel4\Input1;      Hytip0 -> Initializer\input;      Submodel4\Output -> CartesianSpaceStiffness1\Htip0 320 312;      Hmint -> Initializer1\input;      Htip0 -> Splitter1\input;      Splitter4\output -> Negate\input;      Splitter4\output -> Submodel2\Input1;      Splitter1\output -> Rate_control\Hinput;     end;    implementation_end;   YouBot 168 272    description '<Description> <Version>4.0</Version> <IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues> <LibraryPath>Signal\Block Diagram\Gain.emx</LibraryPath> <TimeStamp>2007-9-26 12:15:12</TimeStamp> <AllowLibraryUpdate>True</AllowLibraryUpdate></Description>';    type Gain     ports      signal in input [4,4];      signal out output [4,4];    end;    icon bg bottom     figures      rectangle 152.1 256 183.9 288 fill 15132390;      text 'K' 168 272 color 16711680 16 bold;    end;    implementation eq/*parameters	real initial_value[4,4] = [1,0,0,0;0,1,0,0;0,0,1,0;0,0,0,1];		// gainvariables	boolean initialized;initialequations	initialized=false;equations	if initialized then		output = input;	else		if input[4,4]==1 then			initialized=true;			output = input;		else			output=initial_value;		end;	end;*/equationsoutput=input;implementation_end;  end;  connections   Master_haptic\effort -> Mass_model\W 264 368 424 368;   Mass_model\Hpos0 -> Master_haptic\Htip0;   Master_haptic\JoyTwist <- Joystick\port1;   Master_haptic\Hout0 -> YouBot\input 200 272;   YouBot\output -> Master_haptic\Hytip0 176 312;   Interactive_marker\port1 -> Master_haptic\Hmint;  end; implementation_end;]]>
+  </Sidops>
+</Model>
  <Experiments>
-     <DefaultExperiment><![CDATA[Experiment 1]]>
+  <DefaultExperiment><![CDATA[Experiment 1]]>
 </DefaultExperiment>
   <Experiment>
-    <Name>Experiment 1</Name>
-    <CreatedBy></CreatedBy>
-    <Info></Info>
-<ExpData>
-  <VersionNumber>4.1</VersionNumber>
-  <ModelProperties>
-    <ModelProperty section="CCodeDialog" entry="SubmodelName" value="YouBot"/>
-    <ModelProperty section="CCodeDialog" entry="TargetName" value="Orocos Component"/>
-  </ModelProperties>
-  <Variables>
-   <Parameters>
-   </Parameters>
-   <Initials>
-    <Variable>
-     <Name>Mass_model\init</Name>
-     <Rows>4</Rows>
-     <Columns>4</Columns>
-     <Value>1 0 0 0
+   <Name>Experiment 1</Name>
+   <CreatedBy></CreatedBy>
+   <Info></Info>
+   <ExpData>
+    <VersionNumber>4.1</VersionNumber>
+    <ModelProperties>
+     <ModelProperty section="CCodeDialog" entry="SubmodelName" value="YouBot"></ModelProperty>
+     <ModelProperty section="CCodeDialog" entry="TargetName" value="Orocos Component"></ModelProperty>
+    </ModelProperties>
+    <Variables>
+     <Parameters></Parameters>
+     <Initials>
+      <Variable>
+       <Name>Mass_model\init</Name>
+       <Rows>4</Rows>
+       <Columns>4</Columns>
+       <Value>1 0 0 0
 0 1 0 0
 0 0 1 0
 0 0 0 1</Value>
-    </Variable>
-    <Variable>
-     <Name>Mass_model\W_int_initial</Name>
-     <Rows>6</Rows>
-     <Columns>1</Columns>
-     <Value>0 0 0 0 0 0</Value>
-    </Variable>
-    <Variable>
-     <Name>Master_haptic\JoyRate\init</Name>
-     <Rows>4</Rows>
-     <Columns>4</Columns>
-     <Value>1 0 0 0
+      </Variable>
+      <Variable>
+       <Name>Mass_model\W_int_initial</Name>
+       <Rows>6</Rows>
+       <Columns>1</Columns>
+       <Value>0 0 0 0 0 0</Value>
+      </Variable>
+      <Variable>
+       <Name>Master_haptic\JoyRate\init</Name>
+       <Rows>4</Rows>
+       <Columns>4</Columns>
+       <Value>1 0 0 0
 0 1 0 0
 0 0 1 0
 0 0 0 1</Value>
-    </Variable>
-    <Variable>
-     <Name>Master_haptic\Rate_control\init</Name>
-     <Rows>4</Rows>
-     <Columns>4</Columns>
-     <Value>1 0 0 0
+      </Variable>
+      <Variable>
+       <Name>Master_haptic\Rate_control\init</Name>
+       <Rows>4</Rows>
+       <Columns>4</Columns>
+       <Value>1 0 0 0
 0 1 0 0
 0 0 1 0
 0 0 0 1</Value>
-    </Variable>
-   </Initials>
-  </Variables>
-  <PlotSpecs>
-   <VarNames>
-    <VarName>time</VarName>
-    <VarName>Mass_model\Hpos0[1,4]</VarName>
-    <VarName>Mass_model\Hpos0[2,4]</VarName>
-    <VarName>Mass_model\Hpos0[3,4]</VarName>
-    <VarName>Mass_model\Hpos0[1,3]</VarName>
-    <VarName>Mass_model\Hpos0[2,3]</VarName>
-    <VarName>Mass_model\Hpos0[3,3]</VarName>
-    <VarName>Mass_model\Hpos0[1,2]</VarName>
-    <VarName>Mass_model\Hpos0[2,2]</VarName>
-    <VarName>Mass_model\Hpos0[3,2]</VarName>
-    <VarName>YouBot\input[1,4]</VarName>
-    <VarName>YouBot\input[2,4]</VarName>
-    <VarName>YouBot\input[3,4]</VarName>
-    <VarName>YouBot\input[1,3]</VarName>
-    <VarName>YouBot\input[2,3]</VarName>
-    <VarName>YouBot\input[3,3]</VarName>
-    <VarName>YouBot\input[1,2]</VarName>
-    <VarName>YouBot\input[2,2]</VarName>
-    <VarName>YouBot\input[3,2]</VarName>
-    <VarName>Master_haptic\Rate_control\T[1]</VarName>
-    <VarName>Master_haptic\Rate_control\T[2]</VarName>
-    <VarName>Master_haptic\Rate_control\T[3]</VarName>
-    <VarName>Master_haptic\Rate_control\T[4]</VarName>
-    <VarName>Master_haptic\Rate_control\T[5]</VarName>
-    <VarName>Master_haptic\Rate_control\T[6]</VarName>
-    <VarName>Master_haptic\Rate_control\enorm</VarName>
-    <VarName>Master_haptic\Rate_control\snorm</VarName>
-    <VarName>Master_haptic\Rate_control\Hinput[1,4]</VarName>
-    <VarName>Master_haptic\Rate_control\Hinput[2,4]</VarName>
-    <VarName>Master_haptic\Rate_control\Hinput[3,4]</VarName>
-    <VarName>Master_haptic\Submodel1\T[1]</VarName>
-    <VarName>Master_haptic\Submodel1\T[2]</VarName>
-    <VarName>Master_haptic\Submodel1\T[3]</VarName>
-    <VarName>Master_haptic\Submodel1\T[4]</VarName>
-    <VarName>Master_haptic\Submodel1\T[5]</VarName>
-    <VarName>Master_haptic\Submodel1\T[6]</VarName>
-    <VarName>Master_haptic\Submodel1\dotH[1,1]</VarName>
-    <VarName>Master_haptic\Submodel1\dotH[1,2]</VarName>
-    <VarName>Master_haptic\Submodel1\dotH[1,3]</VarName>
-   </VarNames>
-   <Plots>
-    <Plot>
-     <PlotType>GraphPlot</PlotType>
-     <BasePlot>
-       <UseWindowsBGColor>true</UseWindowsBGColor>
-       <BGColor>13160660</BGColor>
-     </BasePlot>
-     <Grid>
-      <DrawGrid>true</DrawGrid>
-      <GridColor>15780518</GridColor>
-      <XTicks>10</XTicks>
-      <YTicks>10</YTicks>
-      <ZTicks>10</ZTicks>
-      <Use3DLook>false</Use3DLook>
-     </Grid>
-     <PlotBGColor>16777215</PlotBGColor>
-     <ShowPlotTitle>true</ShowPlotTitle>
-     <TitlePosition>1</TitlePosition>
-     <PlotTitle>model</PlotTitle>
-     <ShowXValues>true</ShowXValues>
-     <Fonts>
-      <TitleFont>
-       <Name>Arial</Name>
-       <Height>12</Height>
-       <PitchFamily>34</PitchFamily>
-       <Weight>400</Weight>
-       <Italic>0</Italic>
-       <UnderLine>0</UnderLine>
-       <StrikeOut>0</StrikeOut>
-       <Color>0</Color>
-      </TitleFont>
-      <LabelFont>
-       <Name>Arial</Name>
-       <Height>12</Height>
-       <PitchFamily>34</PitchFamily>
-       <Weight>400</Weight>
-       <Italic>0</Italic>
-       <UnderLine>0</UnderLine>
-       <StrikeOut>0</StrikeOut>
-       <Color>0</Color>
-      </LabelFont>
-      <ValuesFont>
-       <Name>Arial</Name>
-       <Height>10</Height>
-       <PitchFamily>34</PitchFamily>
-       <Weight>400</Weight>
-       <Italic>0</Italic>
-       <UnderLine>0</UnderLine>
-       <StrikeOut>0</StrikeOut>
-       <Color>0</Color>
-      </ValuesFont>
-     </Fonts>
-     <SharedXAxis>true</SharedXAxis>
-     <SharedYAxis>true</SharedYAxis>
-     <SharedZAxis>false</SharedZAxis>
-     <XAxes>
-      <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
-       <Linear>true</Linear>
-       <Scaling>3</Scaling>
-       <Label>time</Label>
-      </Axis>
-     </XAxes>
-     <YAxes>
-      <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>T[1]</Label>
-      </Axis>
-      <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>T[2]</Label>
-      </Axis>
-      <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>T[3]</Label>
-      </Axis>
-      <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>T[4]</Label>
-      </Axis>
-      <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>T[5]</Label>
-      </Axis>
-      <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>8</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>T[6]</Label>
-      </Axis>
-      <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>0.080872300215121</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>enorm</Label>
-      </Axis>
-      <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>Master_haptic\Rate_control\snorm</Label>
-      </Axis>
-      <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>Master_haptic\Rate_control\Hinput[1,4]</Label>
-      </Axis>
-      <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>Master_haptic\Rate_control\Hinput[2,4]</Label>
-      </Axis>
-      <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>10</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>Master_haptic\Rate_control\Hinput[3,4]</Label>
-      </Axis>
-     </YAxes>
-     <ZAxes>
-     </ZAxes>
-     <Curves>
-      <Curve>
-       <LineColor>16711935</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>16711935</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Rate_control\T[1]</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>255</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>255</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Rate_control\T[2]</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>65280</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>65280</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Rate_control\T[3]</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>0</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>0</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Rate_control\T[4]</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>10040319</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>10040319</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Rate_control\T[5]</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>16763904</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>16763904</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Rate_control\T[6]</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>26367</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>26367</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Rate_control\enorm</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>16711935</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>16711935</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Rate_control\snorm</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>10040319</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>10040319</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Rate_control\Hinput[1,4]</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>6736947</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>6736947</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Rate_control\Hinput[2,4]</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>16711935</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>16711935</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Rate_control\Hinput[3,4]</VarName>
-       </YCurveData>
-      </Curve>
-     </Curves>
-     <Legenda>
-      <ShowLegenda>true</ShowLegenda>
-     </Legenda>
-     <StripChartPlots>
-      <DistributState>2</DistributState>
-      <StripChartPlot>
+      </Variable>
+     </Initials>
+    </Variables>
+    <PlotSpecs>
+     <VarNames>
+      <VarName>time</VarName>
+      <VarName>Mass_model\Hpos0[1,4]</VarName>
+      <VarName>Mass_model\Hpos0[2,4]</VarName>
+      <VarName>Mass_model\Hpos0[3,4]</VarName>
+      <VarName>Mass_model\Hpos0[1,3]</VarName>
+      <VarName>Mass_model\Hpos0[2,3]</VarName>
+      <VarName>Mass_model\Hpos0[3,3]</VarName>
+      <VarName>Mass_model\Hpos0[1,2]</VarName>
+      <VarName>Mass_model\Hpos0[2,2]</VarName>
+      <VarName>Mass_model\Hpos0[3,2]</VarName>
+      <VarName>YouBot\input[1,4]</VarName>
+      <VarName>YouBot\input[2,4]</VarName>
+      <VarName>YouBot\input[3,4]</VarName>
+      <VarName>YouBot\input[1,3]</VarName>
+      <VarName>YouBot\input[2,3]</VarName>
+      <VarName>YouBot\input[3,3]</VarName>
+      <VarName>YouBot\input[1,2]</VarName>
+      <VarName>YouBot\input[2,2]</VarName>
+      <VarName>YouBot\input[3,2]</VarName>
+      <VarName>Master_haptic\Rate_control\T[1]</VarName>
+      <VarName>Master_haptic\Rate_control\T[2]</VarName>
+      <VarName>Master_haptic\Rate_control\T[3]</VarName>
+      <VarName>Master_haptic\Rate_control\T[4]</VarName>
+      <VarName>Master_haptic\Rate_control\T[5]</VarName>
+      <VarName>Master_haptic\Rate_control\T[6]</VarName>
+      <VarName>Master_haptic\Rate_control\enorm</VarName>
+      <VarName>Master_haptic\Rate_control\snorm</VarName>
+      <VarName>Master_haptic\Rate_control\Hinput[1,4]</VarName>
+      <VarName>Master_haptic\Rate_control\Hinput[2,4]</VarName>
+      <VarName>Master_haptic\Rate_control\Hinput[3,4]</VarName>
+      <VarName>Master_haptic\Submodel1\T[1]</VarName>
+      <VarName>Master_haptic\Submodel1\T[2]</VarName>
+      <VarName>Master_haptic\Submodel1\T[3]</VarName>
+      <VarName>Master_haptic\Submodel1\T[4]</VarName>
+      <VarName>Master_haptic\Submodel1\T[5]</VarName>
+      <VarName>Master_haptic\Submodel1\T[6]</VarName>
+      <VarName>Master_haptic\Submodel1\dotH[1,1]</VarName>
+      <VarName>Master_haptic\Submodel1\dotH[1,2]</VarName>
+      <VarName>Master_haptic\Submodel1\dotH[1,3]</VarName>
+     </VarNames>
+     <Plots>
+      <Plot>
+       <PlotType>GraphPlot</PlotType>
+       <BasePlot>
+        <UseWindowsBGColor>true</UseWindowsBGColor>
+        <BGColor>13160660</BGColor>
+       </BasePlot>
+       <Grid>
+        <DrawGrid>true</DrawGrid>
+        <GridColor>15780518</GridColor>
+        <XTicks>10</XTicks>
+        <YTicks>10</YTicks>
+        <ZTicks>10</ZTicks>
+        <Use3DLook>false</Use3DLook>
+       </Grid>
+       <PlotBGColor>16777215</PlotBGColor>
+       <ShowPlotTitle>true</ShowPlotTitle>
+       <TitlePosition>1</TitlePosition>
+       <PlotTitle>model</PlotTitle>
+       <ShowXValues>true</ShowXValues>
+       <Fonts>
+        <TitleFont>
+         <Name>Arial</Name>
+         <Height>12</Height>
+         <PitchFamily>34</PitchFamily>
+         <Weight>400</Weight>
+         <Italic>0</Italic>
+         <UnderLine>0</UnderLine>
+         <StrikeOut>0</StrikeOut>
+         <Color>0</Color>
+        </TitleFont>
+        <LabelFont>
+         <Name>Arial</Name>
+         <Height>12</Height>
+         <PitchFamily>34</PitchFamily>
+         <Weight>400</Weight>
+         <Italic>0</Italic>
+         <UnderLine>0</UnderLine>
+         <StrikeOut>0</StrikeOut>
+         <Color>0</Color>
+        </LabelFont>
+        <ValuesFont>
+         <Name>Arial</Name>
+         <Height>10</Height>
+         <PitchFamily>34</PitchFamily>
+         <Weight>400</Weight>
+         <Italic>0</Italic>
+         <UnderLine>0</UnderLine>
+         <StrikeOut>0</StrikeOut>
+         <Color>0</Color>
+        </ValuesFont>
+       </Fonts>
+       <SharedXAxis>true</SharedXAxis>
+       <SharedYAxis>true</SharedYAxis>
+       <SharedZAxis>false</SharedZAxis>
+       <XAxes>
+        <Axis>
+         <Minimum>0</Minimum>
+         <Maximum>10</Maximum>
+         <Linear>true</Linear>
+         <Scaling>3</Scaling>
+         <Label>time</Label>
+        </Axis>
+       </XAxes>
+       <YAxes>
+        <Axis>
+         <Minimum>0</Minimum>
+         <Maximum>10</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>T[1]</Label>
+        </Axis>
+        <Axis>
+         <Minimum>0</Minimum>
+         <Maximum>10</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>T[2]</Label>
+        </Axis>
+        <Axis>
+         <Minimum>0</Minimum>
+         <Maximum>10</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>T[3]</Label>
+        </Axis>
+        <Axis>
+         <Minimum>0</Minimum>
+         <Maximum>10</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>T[4]</Label>
+        </Axis>
+        <Axis>
+         <Minimum>0</Minimum>
+         <Maximum>10</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>T[5]</Label>
+        </Axis>
+        <Axis>
+         <Minimum>0</Minimum>
+         <Maximum>8</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>T[6]</Label>
+        </Axis>
+        <Axis>
+         <Minimum>0</Minimum>
+         <Maximum>0.080872300215121</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>enorm</Label>
+        </Axis>
+        <Axis>
+         <Minimum>0</Minimum>
+         <Maximum>10</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>Master_haptic\Rate_control\snorm</Label>
+        </Axis>
+        <Axis>
+         <Minimum>0</Minimum>
+         <Maximum>10</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>Master_haptic\Rate_control\Hinput[1,4]</Label>
+        </Axis>
+        <Axis>
+         <Minimum>0</Minimum>
+         <Maximum>10</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>Master_haptic\Rate_control\Hinput[2,4]</Label>
+        </Axis>
+        <Axis>
+         <Minimum>0</Minimum>
+         <Maximum>10</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>Master_haptic\Rate_control\Hinput[3,4]</Label>
+        </Axis>
+       </YAxes>
+       <ZAxes></ZAxes>
+       <Curves>
+        <Curve>
+         <LineColor>16711935</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>16711935</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Rate_control\T[1]</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>255</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>255</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Rate_control\T[2]</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>65280</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>65280</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Rate_control\T[3]</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>0</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>0</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Rate_control\T[4]</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>10040319</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>10040319</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Rate_control\T[5]</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>16763904</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>16763904</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Rate_control\T[6]</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>26367</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>26367</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Rate_control\enorm</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>16711935</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>16711935</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Rate_control\snorm</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>10040319</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>10040319</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Rate_control\Hinput[1,4]</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>6736947</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>6736947</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Rate_control\Hinput[2,4]</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>16711935</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>16711935</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Rate_control\Hinput[3,4]</VarName>
+         </YCurveData>
+        </Curve>
+       </Curves>
        <Legenda>
         <ShowLegenda>true</ShowLegenda>
        </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-     </StripChartPlots>
-    </Plot>
-    <Plot>
-     <PlotType>D3DPlot</PlotType>
-     <BasePlot>
-       <UseWindowsBGColor>true</UseWindowsBGColor>
-       <BGColor>13160660</BGColor>
-     </BasePlot>
-     <RenderQuality>137</RenderQuality>
-     <ShowGrid>true</ShowGrid>
-     <BackgroundColor>4294967295</BackgroundColor>
-     <FrameScale>1</FrameScale>
-     <FrameThickness>1</FrameThickness>
-     <MainFrame>
-      <Frame>
-       <ScaleValue>
-        <X>
-         <Value>1</Value>
-        </X>
-        <Y>
-         <Value>1</Value>
-        </Y>
-        <Z>
-         <Value>1</Value>
-        </Z>
-       </ScaleValue>
-       <ShowReferenceFrame>true</ShowReferenceFrame>
-       <Name>Reference Frame</Name>
-       <Position>
-       </Position>
-       <Orientation>
-        <Angles>
-        </Angles>
-        <OrientationType>Bryant</OrientationType>
-       </Orientation>
-       <LockX>false</LockX>
-       <LockY>false</LockY>
-       <LockZ>false</LockZ>
-       <LockXPitch>false</LockXPitch>
-       <LockYYaw>false</LockYYaw>
-       <LockZRoll>false</LockZRoll>
-       <Childs>
+       <StripChartPlots>
+        <DistributState>2</DistributState>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+       </StripChartPlots>
+      </Plot>
+      <Plot>
+       <PlotType>D3DPlot</PlotType>
+       <BasePlot>
+        <UseWindowsBGColor>true</UseWindowsBGColor>
+        <BGColor>13160660</BGColor>
+       </BasePlot>
+       <RenderQuality>137</RenderQuality>
+       <ShowGrid>true</ShowGrid>
+       <BackgroundColor>4294967295</BackgroundColor>
+       <FrameScale>1</FrameScale>
+       <FrameThickness>1</FrameThickness>
+       <MainFrame>
         <Frame>
          <ScaleValue>
      <X>
@@ -1144,13 +534,11 @@ output=input;implementation_end;
       <Value>1</Value>
      </Z>
          </ScaleValue>
-         <ShowReferenceFrame>false</ShowReferenceFrame>
-         <Name>Default Lights and Cameras</Name>
-         <Position>
-         </Position>
+         <ShowReferenceFrame>true</ShowReferenceFrame>
+         <Name>Reference Frame</Name>
+         <Position></Position>
          <Orientation>
-     <Angles>
-     </Angles>
+     <Angles></Angles>
      <OrientationType>Bryant</OrientationType>
          </Orientation>
          <LockX>false</LockX>
@@ -1160,957 +548,24 @@ output=input;implementation_end;
          <LockYYaw>false</LockYYaw>
          <LockZRoll>false</LockZRoll>
          <Childs>
-     <Light>
-      <ShowReferenceFrame>false</ShowReferenceFrame>
-      <Name>Ambient</Name>
-      <Position>
-      </Position>
-      <Orientation>
-       <ZAxis>
-        <Z>
-         <Value>1</Value>
-        </Z>
-       </ZAxis>
-       <YAxis>
-        <Y>
-         <Value>1</Value>
-        </Y>
-       </YAxis>
-       <OrientationType>Direct3D</OrientationType>
-      </Orientation>
-      <LockX>false</LockX>
-      <LockY>false</LockY>
-      <LockZ>false</LockZ>
-      <LockXPitch>false</LockXPitch>
-      <LockYYaw>false</LockYYaw>
-      <LockZRoll>false</LockZRoll>
-      <Childs>
-      </Childs>
-      <LightType>0</LightType>
-      <LightColor>
-       <Color>
-        <X>
-         <Value>0.3</Value>
-        </X>
-        <Y>
-         <Value>0.3</Value>
-        </Y>
-        <Z>
-         <Value>0.3</Value>
-        </Z>
-       </Color>
-       <Offset>
-       </Offset>
-       <Multipliers>
-        <X>
-         <Value>1</Value>
-        </X>
-        <Y>
-         <Value>1</Value>
-        </Y>
-        <Z>
-         <Value>1</Value>
-        </Z>
-       </Multipliers>
-       <Direct3DColorRange>true</Direct3DColorRange>
-      </LightColor>
-      <AmbientLight>
-       <Color>
-        <X>
-         <Value>0.3</Value>
-        </X>
-        <Y>
-         <Value>0.3</Value>
-        </Y>
-        <Z>
-         <Value>0.3</Value>
-        </Z>
-       </Color>
-       <Offset>
-       </Offset>
-       <Multipliers>
-        <X>
-         <Value>1</Value>
-        </X>
-        <Y>
-         <Value>1</Value>
-        </Y>
-        <Z>
-         <Value>1</Value>
-        </Z>
-       </Multipliers>
-       <Direct3DColorRange>true</Direct3DColorRange>
-      </AmbientLight>
-      <AmbientOn>true</AmbientOn>
-      <DiffuseOn>false</DiffuseOn>
-      <SpecularOn>false</SpecularOn>
-     </Light>
-     <Light>
-      <ShowReferenceFrame>false</ShowReferenceFrame>
-      <Name>Parallel</Name>
-      <Position>
-       <X>
-        <Value>-3</Value>
-       </X>
-       <Y>
-        <Value>5</Value>
-       </Y>
-       <Z>
-        <Value>3</Value>
-       </Z>
-      </Position>
-      <Orientation>
-       <ZAxis>
-        <X>
-         <Value>0.457495710997814</Value>
-        </X>
-        <Y>
-         <Value>-0.762492851663023</Value>
-        </Y>
-        <Z>
-         <Value>-0.457495710997814</Value>
-        </Z>
-       </ZAxis>
-       <YAxis>
-        <X>
-         <Value>0.235379601434674</Value>
-        </X>
-        <Y>
-         <Value>-0.392299335724456</Value>
-        </Y>
-        <Z>
-         <Value>0.889211827642101</Value>
-        </Z>
-       </YAxis>
-       <OrientationType>Direct3D</OrientationType>
-      </Orientation>
-      <LockX>false</LockX>
-      <LockY>false</LockY>
-      <LockZ>false</LockZ>
-      <LockXPitch>false</LockXPitch>
-      <LockYYaw>false</LockYYaw>
-      <LockZRoll>false</LockZRoll>
-      <Childs>
-      </Childs>
-      <LightType>3</LightType>
-      <LightColor>
-       <Color>
-        <X>
-         <Value>0.5</Value>
-        </X>
-        <Y>
-         <Value>0.5</Value>
-        </Y>
-        <Z>
-         <Value>0.5</Value>
-        </Z>
-       </Color>
-       <Offset>
-       </Offset>
-       <Multipliers>
-        <X>
-         <Value>1</Value>
-        </X>
-        <Y>
-         <Value>1</Value>
-        </Y>
-        <Z>
-         <Value>1</Value>
-        </Z>
-       </Multipliers>
-       <Direct3DColorRange>true</Direct3DColorRange>
-      </LightColor>
-      <Attenuation>
-       <Constant>
-        <Value>1</Value>
-       </Constant>
-       <Linear>
-        <Value>0</Value>
-       </Linear>
-       <Quadratic>
-        <Value>0</Value>
-       </Quadratic>
-      </Attenuation>
-      <DiffuseLight>
-       <Color>
-        <X>
-         <Value>0.5</Value>
-        </X>
-        <Y>
-         <Value>0.5</Value>
-        </Y>
-        <Z>
-         <Value>0.5</Value>
-        </Z>
-       </Color>
-       <Offset>
-       </Offset>
-       <Multipliers>
-        <X>
-         <Value>1</Value>
-        </X>
-        <Y>
-         <Value>1</Value>
-        </Y>
-        <Z>
-         <Value>1</Value>
-        </Z>
-       </Multipliers>
-       <Direct3DColorRange>true</Direct3DColorRange>
-      </DiffuseLight>
-      <SpecularLight>
-       <Color>
-        <X>
-         <Value>0.5</Value>
-        </X>
-        <Y>
-         <Value>0.5</Value>
-        </Y>
-        <Z>
-         <Value>0.5</Value>
-        </Z>
-       </Color>
-       <Offset>
-       </Offset>
-       <Multipliers>
-        <X>
-         <Value>1</Value>
-        </X>
-        <Y>
-         <Value>1</Value>
-        </Y>
-        <Z>
-         <Value>1</Value>
-        </Z>
-       </Multipliers>
-       <Direct3DColorRange>true</Direct3DColorRange>
-      </SpecularLight>
-      <AmbientOn>false</AmbientOn>
-      <DiffuseOn>true</DiffuseOn>
-      <SpecularOn>true</SpecularOn>
-     </Light>
-     <Light>
-      <ShowReferenceFrame>false</ShowReferenceFrame>
-      <Name>Spot Light 1</Name>
-      <Position>
-       <X>
-        <Value>-3</Value>
-       </X>
-       <Y>
-        <Value>-5</Value>
-       </Y>
-       <Z>
-        <Value>1</Value>
-       </Z>
-      </Position>
-      <Orientation>
-       <ZAxis>
-        <X>
-         <Value>0.50709255283711</Value>
-        </X>
-        <Y>
-         <Value>0.845154254728517</Value>
-        </Y>
-        <Z>
-         <Value>-0.169030850945703</Value>
-        </Z>
-       </ZAxis>
-       <YAxis>
-        <X>
-         <Value>0.0869656553478673</Value>
-        </X>
-        <Y>
-         <Value>0.144942758913112</Value>
-        </Y>
-        <Z>
-         <Value>0.985610760609162</Value>
-        </Z>
-       </YAxis>
-       <OrientationType>Direct3D</OrientationType>
-      </Orientation>
-      <LockX>false</LockX>
-      <LockY>false</LockY>
-      <LockZ>false</LockZ>
-      <LockXPitch>false</LockXPitch>
-      <LockYYaw>false</LockYYaw>
-      <LockZRoll>false</LockZRoll>
-      <Childs>
-      </Childs>
-      <LightType>2</LightType>
-      <LightColor>
-       <Color>
-        <X>
-         <Value>0.5</Value>
-        </X>
-        <Y>
-         <Value>0.5</Value>
-        </Y>
-        <Z>
-         <Value>0.5</Value>
-        </Z>
-       </Color>
-       <Offset>
-       </Offset>
-       <Multipliers>
-        <X>
-         <Value>1</Value>
-        </X>
-        <Y>
-         <Value>1</Value>
-        </Y>
-        <Z>
-         <Value>1</Value>
-        </Z>
-       </Multipliers>
-       <Direct3DColorRange>true</Direct3DColorRange>
-      </LightColor>
-      <Attenuation>
-       <Constant>
-        <Value>1</Value>
-       </Constant>
-       <Linear>
-        <Value>0.05</Value>
-       </Linear>
-       <Quadratic>
-        <Value>0.05</Value>
-       </Quadratic>
-      </Attenuation>
-      <Umbra>
-       <Value>1.0471975511966</Value>
-      </Umbra>
-      <Penumbra>
-       <Value>1.0471975511966</Value>
-      </Penumbra>
-      <DiffuseLight>
-       <Color>
-        <X>
-         <Value>0.5</Value>
-        </X>
-        <Y>
-         <Value>0.5</Value>
-        </Y>
-        <Z>
-         <Value>0.5</Value>
-        </Z>
-       </Color>
-       <Offset>
-       </Offset>
-       <Multipliers>
-        <X>
-         <Value>1</Value>
-        </X>
-        <Y>
-         <Value>1</Value>
-        </Y>
-        <Z>
-         <Value>1</Value>
-        </Z>
-       </Multipliers>
-       <Direct3DColorRange>true</Direct3DColorRange>
-      </DiffuseLight>
-      <SpecularLight>
-       <Color>
-        <X>
-         <Value>0.5</Value>
-        </X>
-        <Y>
-         <Value>0.5</Value>
-        </Y>
-        <Z>
-         <Value>0.5</Value>
-        </Z>
-       </Color>
-       <Offset>
-       </Offset>
-       <Multipliers>
-        <X>
-         <Value>1</Value>
-        </X>
-        <Y>
-         <Value>1</Value>
-        </Y>
-        <Z>
-         <Value>1</Value>
-        </Z>
-       </Multipliers>
-       <Direct3DColorRange>true</Direct3DColorRange>
-      </SpecularLight>
-      <AmbientOn>false</AmbientOn>
-      <DiffuseOn>true</DiffuseOn>
-      <SpecularOn>true</SpecularOn>
-     </Light>
-     <Light>
-      <ShowReferenceFrame>false</ShowReferenceFrame>
-      <Name>Spot Light 2</Name>
-      <Position>
-       <X>
-        <Value>2</Value>
-       </X>
-       <Y>
-        <Value>-3</Value>
-       </Y>
-       <Z>
-        <Value>-1</Value>
-       </Z>
-      </Position>
-      <Orientation>
-       <ZAxis>
-        <X>
-         <Value>-0.534522483824849</Value>
-        </X>
-        <Y>
-         <Value>0.801783725737273</Value>
-        </Y>
-        <Z>
-         <Value>0.267261241912424</Value>
-        </Z>
-       </ZAxis>
-       <YAxis>
-        <X>
-         <Value>0.14824986333222</Value>
-        </X>
-        <Y>
-         <Value>-0.22237479499833</Value>
-        </Y>
-        <Z>
-         <Value>0.963624111659432</Value>
-        </Z>
-       </YAxis>
-       <OrientationType>Direct3D</OrientationType>
-      </Orientation>
-      <LockX>false</LockX>
-      <LockY>false</LockY>
-      <LockZ>false</LockZ>
-      <LockXPitch>false</LockXPitch>
-      <LockYYaw>false</LockYYaw>
-      <LockZRoll>false</LockZRoll>
-      <Childs>
-      </Childs>
-      <LightType>2</LightType>
-      <LightColor>
-       <Color>
-        <X>
-         <Value>1</Value>
-        </X>
-        <Y>
-         <Value>1</Value>
-        </Y>
-        <Z>
-         <Value>1</Value>
-        </Z>
-       </Color>
-       <Offset>
-       </Offset>
-       <Multipliers>
-        <X>
-         <Value>1</Value>
-        </X>
-        <Y>
-         <Value>1</Value>
-        </Y>
-        <Z>
-         <Value>1</Value>
-        </Z>
-       </Multipliers>
-       <Direct3DColorRange>true</Direct3DColorRange>
-      </LightColor>
-      <Attenuation>
-       <Constant>
-        <Value>1</Value>
-       </Constant>
-       <Linear>
-        <Value>0.05</Value>
-       </Linear>
-       <Quadratic>
-        <Value>0.05</Value>
-       </Quadratic>
-      </Attenuation>
-      <Umbra>
-       <Value>1.5707963267949</Value>
-      </Umbra>
-      <Penumbra>
-       <Value>1.5707963267949</Value>
-      </Penumbra>
-      <DiffuseLight>
-       <Color>
-        <X>
-         <Value>1</Value>
-        </X>
-        <Y>
-         <Value>1</Value>
-        </Y>
-        <Z>
-         <Value>1</Value>
-        </Z>
-       </Color>
-       <Offset>
-       </Offset>
-       <Multipliers>
-        <X>
-         <Value>1</Value>
-        </X>
-        <Y>
-         <Value>1</Value>
-        </Y>
-        <Z>
-         <Value>1</Value>
-        </Z>
-       </Multipliers>
-       <Direct3DColorRange>true</Direct3DColorRange>
-      </DiffuseLight>
-      <SpecularLight>
-       <Color>
-        <X>
-         <Value>0.5</Value>
-        </X>
-        <Y>
-         <Value>0.5</Value>
-        </Y>
-        <Z>
-         <Value>0.5</Value>
-        </Z>
-       </Color>
-       <Offset>
-       </Offset>
-       <Multipliers>
-        <X>
-         <Value>1</Value>
-        </X>
-        <Y>
-         <Value>1</Value>
-        </Y>
-        <Z>
-         <Value>1</Value>
-        </Z>
-       </Multipliers>
-       <Direct3DColorRange>true</Direct3DColorRange>
-      </SpecularLight>
-      <AmbientOn>false</AmbientOn>
-      <DiffuseOn>true</DiffuseOn>
-      <SpecularOn>true</SpecularOn>
-     </Light>
-     <Camera>
-      <ShowReferenceFrame>false</ShowReferenceFrame>
-      <Name>Camera Looking at Origin</Name>
-      <Position>
-       <X>
-        <Value>-8.35390477301535</Value>
-       </X>
-       <Y>
-        <Value>0.417596142591664</Value>
-       </Y>
-       <Z>
-        <Value>5.10273343464895</Value>
-       </Z>
-      </Position>
-      <Orientation>
-       <ZAxis>
-        <X>
-         <Value>0.852616835570354</Value>
-        </X>
-        <Y>
-         <Value>-0.0426207278293375</Value>
-        </Y>
-        <Z>
-         <Value>-0.520795550347057</Value>
-        </Z>
-       </ZAxis>
-       <YAxis>
-        <X>
-         <Value>0.520146081685539</Value>
-        </X>
-        <Y>
-         <Value>-0.0260011339843951</Value>
-        </Y>
-        <Z>
-         <Value>0.853681436332492</Value>
-        </Z>
-       </YAxis>
-       <OrientationType>Direct3D</OrientationType>
-      </Orientation>
-      <LockX>false</LockX>
-      <LockY>false</LockY>
-      <LockZ>false</LockZ>
-      <LockXPitch>false</LockXPitch>
-      <LockYYaw>false</LockYYaw>
-      <LockZRoll>false</LockZRoll>
-      <Childs>
-      </Childs>
-      <FrontPlane>0.01</FrontPlane>
-      <BackPlane>100</BackPlane>
-      <Field>0.00392699081698724</Field>
-      <Fieldy>45</Fieldy>
-      <PlaneLeft>-10</PlaneLeft>
-      <PlaneRight>10</PlaneRight>
-      <PlaneTop>10</PlaneTop>
-      <PlaneBottom>-10</PlaneBottom>
-      <UseLookatPosition>true</UseLookatPosition>
-      <LookatPosition>
-      </LookatPosition>
-      <UseAlwaysLookUp>true</UseAlwaysLookUp>
-      <LookUpVector>
-       <Z>
-        <Value>1</Value>
-       </Z>
-      </LookUpVector>
-      <RightHand>true</RightHand>
-      <Perspective>true</Perspective>
-      <IsSelectedCamera>true</IsSelectedCamera>
-     </Camera>
-     <Camera>
-      <ShowReferenceFrame>false</ShowReferenceFrame>
-      <Name>Front(XY)-Camera</Name>
-      <Position>
-       <Z>
-        <Value>10</Value>
-       </Z>
-      </Position>
-      <Orientation>
-       <ZAxis>
-        <Z>
-         <Value>-1</Value>
-        </Z>
-       </ZAxis>
-       <YAxis>
-        <Y>
-         <Value>1</Value>
-        </Y>
-       </YAxis>
-       <OrientationType>Direct3D</OrientationType>
-      </Orientation>
-      <LockX>false</LockX>
-      <LockY>false</LockY>
-      <LockZ>false</LockZ>
-      <LockXPitch>false</LockXPitch>
-      <LockYYaw>false</LockYYaw>
-      <LockZRoll>false</LockZRoll>
-      <Childs>
-      </Childs>
-      <FrontPlane>0.01</FrontPlane>
-      <BackPlane>100</BackPlane>
-      <Field>10</Field>
-      <Fieldy>45</Fieldy>
-      <PlaneLeft>-10</PlaneLeft>
-      <PlaneRight>10</PlaneRight>
-      <PlaneTop>10</PlaneTop>
-      <PlaneBottom>-10</PlaneBottom>
-      <UseLookatPosition>true</UseLookatPosition>
-      <LookatPosition>
-      </LookatPosition>
-      <UseAlwaysLookUp>true</UseAlwaysLookUp>
-      <LookUpVector>
-       <Y>
-        <Value>1</Value>
-       </Y>
-      </LookUpVector>
-      <RightHand>true</RightHand>
-      <Perspective>false</Perspective>
-      <IsSelectedCamera>false</IsSelectedCamera>
-     </Camera>
-     <Camera>
-      <ShowReferenceFrame>false</ShowReferenceFrame>
-      <Name>Side(YZ)-Camera</Name>
-      <Position>
-       <X>
-        <Value>10</Value>
-       </X>
-      </Position>
-      <Orientation>
-       <ZAxis>
-        <X>
-         <Value>-1</Value>
-        </X>
-       </ZAxis>
-       <YAxis>
-        <Z>
-         <Value>1</Value>
-        </Z>
-       </YAxis>
-       <OrientationType>Direct3D</OrientationType>
-      </Orientation>
-      <LockX>false</LockX>
-      <LockY>false</LockY>
-      <LockZ>false</LockZ>
-      <LockXPitch>false</LockXPitch>
-      <LockYYaw>false</LockYYaw>
-      <LockZRoll>false</LockZRoll>
-      <Childs>
-      </Childs>
-      <FrontPlane>0.01</FrontPlane>
-      <BackPlane>100</BackPlane>
-      <Field>10</Field>
-      <Fieldy>45</Fieldy>
-      <PlaneLeft>-10</PlaneLeft>
-      <PlaneRight>10</PlaneRight>
-      <PlaneTop>10</PlaneTop>
-      <PlaneBottom>-10</PlaneBottom>
-      <UseLookatPosition>true</UseLookatPosition>
-      <LookatPosition>
-      </LookatPosition>
-      <UseAlwaysLookUp>true</UseAlwaysLookUp>
-      <LookUpVector>
-       <Z>
-        <Value>1</Value>
-       </Z>
-      </LookUpVector>
-      <RightHand>true</RightHand>
-      <Perspective>false</Perspective>
-      <IsSelectedCamera>false</IsSelectedCamera>
-     </Camera>
-     <Camera>
-      <ShowReferenceFrame>false</ShowReferenceFrame>
-      <Name>Top(XZ)-Camera</Name>
-      <Position>
-       <Y>
-        <Value>10</Value>
-       </Y>
-      </Position>
-      <Orientation>
-       <ZAxis>
-        <Y>
-         <Value>-1</Value>
-        </Y>
-       </ZAxis>
-       <YAxis>
-        <X>
-         <Value>1</Value>
-        </X>
-       </YAxis>
-       <OrientationType>Direct3D</OrientationType>
-      </Orientation>
-      <LockX>false</LockX>
-      <LockY>false</LockY>
-      <LockZ>false</LockZ>
-      <LockXPitch>false</LockXPitch>
-      <LockYYaw>false</LockYYaw>
-      <LockZRoll>false</LockZRoll>
-      <Childs>
-      </Childs>
-      <FrontPlane>0.01</FrontPlane>
-      <BackPlane>100</BackPlane>
-      <Field>10</Field>
-      <Fieldy>45</Fieldy>
-      <PlaneLeft>-10</PlaneLeft>
-      <PlaneRight>10</PlaneRight>
-      <PlaneTop>10</PlaneTop>
-      <PlaneBottom>-10</PlaneBottom>
-      <UseLookatPosition>true</UseLookatPosition>
-      <LookatPosition>
-      </LookatPosition>
-      <UseAlwaysLookUp>true</UseAlwaysLookUp>
-      <LookUpVector>
-       <X>
-        <Value>1</Value>
-       </X>
-      </LookUpVector>
-      <RightHand>true</RightHand>
-      <Perspective>false</Perspective>
-      <IsSelectedCamera>false</IsSelectedCamera>
-     </Camera>
-         </Childs>
-        </Frame>
-        <Frame>
-         <ScaleValue>
-     <X>
-      <Value>1</Value>
-     </X>
-     <Y>
-      <Value>1</Value>
-     </Y>
-     <Z>
-      <Value>1</Value>
-     </Z>
-         </ScaleValue>
-         <ShowReferenceFrame>false</ShowReferenceFrame>
-         <Name>Scenery</Name>
-         <Position>
-         </Position>
-         <Orientation>
-     <Angles>
-     </Angles>
-     <OrientationType>Bryant</OrientationType>
-         </Orientation>
-         <LockX>false</LockX>
-         <LockY>false</LockY>
-         <LockZ>false</LockZ>
-         <LockXPitch>false</LockXPitch>
-         <LockYYaw>false</LockYYaw>
-         <LockZRoll>false</LockZRoll>
-         <Childs>
-     <Cube>
-      <Center>Center</Center>
-      <RibLength>1</RibLength>
-      <ShowInnerSide>true</ShowInnerSide>
-      <Accuracy>4</Accuracy>
-      <ScaleValue>
-       <X>
-        <Value>1</Value>
-       </X>
-       <Y>
-        <Value>1</Value>
-       </Y>
-       <Z>
-        <Value>1</Value>
-       </Z>
-      </ScaleValue>
-      <OverrideColor>true</OverrideColor>
-      <MeshColor>
-       <X>
-        <Value>1</Value>
-       </X>
-       <Y>
-        <Value>1</Value>
-       </Y>
-       <Z>
-        <Value>1</Value>
-       </Z>
-      </MeshColor>
-      <Alpha>1</Alpha>
-      <MeshColorMultipliers>
-       <X>
-        <Value>1</Value>
-       </X>
-       <Y>
-        <Value>1</Value>
-       </Y>
-       <Z>
-        <Value>1</Value>
-       </Z>
-      </MeshColorMultipliers>
-      <MeshColorOffsets>
-      </MeshColorOffsets>
-      <Direct3DColorRange>true</Direct3DColorRange>
-      <SpecularColor>
-       <X>
-        <Value>0.5</Value>
-       </X>
-       <Y>
-        <Value>0.5</Value>
-       </Y>
-       <Z>
-        <Value>0.5</Value>
-       </Z>
-      </SpecularColor>
-      <EmissiveColor>
-      </EmissiveColor>
-      <ShininessPower>
-       <Value>15</Value>
-      </ShininessPower>
-      <OverrideQuality>false</OverrideQuality>
-      <ShowReferenceFrame>true</ShowReferenceFrame>
-      <Name>Block</Name>
-      <Position>
-       <X>
-        <VariableName>Mass_model\Hpos0[1,4]</VariableName>
-        <Value>0.0659246260059107</Value>
-       </X>
-       <Y>
-        <VariableName>Mass_model\Hpos0[2,4]</VariableName>
-        <Value>-0.0659246260059101</Value>
-       </Y>
-       <Z>
-        <VariableName>Mass_model\Hpos0[3,4]</VariableName>
-        <Value>0.0659246260059101</Value>
-       </Z>
-      </Position>
-      <Orientation>
-       <ZAxis>
-        <X>
-         <VariableName>Mass_model\Hpos0[1,3]</VariableName>
-         <Value>0.895648987591683</Value>
-        </X>
-        <Y>
-         <VariableName>Mass_model\Hpos0[2,3]</VariableName>
-         <Value>0.25796020935491</Value>
-        </Y>
-        <Z>
-         <VariableName>Mass_model\Hpos0[3,3]</VariableName>
-         <Value>0.362311221763229</Value>
-        </Z>
-       </ZAxis>
-       <YAxis>
-        <X>
-         <VariableName>Mass_model\Hpos0[1,2]</VariableName>
-         <Value>0.257960209354912</Value>
-        </X>
-        <Y>
-         <VariableName>Mass_model\Hpos0[2,2]</VariableName>
-         <Value>0.36231122176323</Value>
-        </Y>
-        <Z>
-         <VariableName>Mass_model\Hpos0[3,2]</VariableName>
-         <Value>-0.895648987591682</Value>
-        </Z>
-       </YAxis>
-       <OrientationType>Matrix</OrientationType>
-      </Orientation>
-      <LockX>false</LockX>
-      <LockY>false</LockY>
-      <LockZ>false</LockZ>
-      <LockXPitch>false</LockXPitch>
-      <LockYYaw>false</LockYYaw>
-      <LockZRoll>false</LockZRoll>
-      <Childs>
-      </Childs>
-     </Cube>
      <Frame>
       <ScaleValue>
        <X>
-        <Value>0.5</Value>
+        <Value>1</Value>
        </X>
        <Y>
-        <Value>0.5</Value>
+        <Value>1</Value>
        </Y>
        <Z>
-        <Value>0.5</Value>
+        <Value>1</Value>
        </Z>
       </ScaleValue>
-      <ShowReferenceFrame>true</ShowReferenceFrame>
-      <Name>Reference Frame</Name>
-      <Position>
-       <X>
-        <VariableName>YouBot\input[1,4]</VariableName>
-        <Value>0.0659246260059107</Value>
-       </X>
-       <Y>
-        <VariableName>YouBot\input[2,4]</VariableName>
-        <Value>-0.0659246260059101</Value>
-       </Y>
-       <Z>
-        <VariableName>YouBot\input[3,4]</VariableName>
-        <Value>0.0659246260059101</Value>
-       </Z>
-      </Position>
+      <ShowReferenceFrame>false</ShowReferenceFrame>
+      <Name>Default Lights and Cameras</Name>
+      <Position></Position>
       <Orientation>
-       <ZAxis>
-        <X>
-         <VariableName>YouBot\input[1,3]</VariableName>
-         <Value>0.895648987591683</Value>
-        </X>
-        <Y>
-         <VariableName>YouBot\input[2,3]</VariableName>
-         <Value>0.25796020935491</Value>
-        </Y>
-        <Z>
-         <VariableName>YouBot\input[3,3]</VariableName>
-         <Value>0.362311221763229</Value>
-        </Z>
-       </ZAxis>
-       <YAxis>
-        <X>
-         <VariableName>YouBot\input[1,2]</VariableName>
-         <Value>0.257960209354912</Value>
-        </X>
-        <Y>
-         <VariableName>YouBot\input[2,2]</VariableName>
-         <Value>0.36231122176323</Value>
-        </Y>
-        <Z>
-         <VariableName>YouBot\input[3,2]</VariableName>
-         <Value>-0.895648987591682</Value>
-        </Z>
-       </YAxis>
-       <OrientationType>Matrix</OrientationType>
+       <Angles></Angles>
+       <OrientationType>Bryant</OrientationType>
       </Orientation>
       <LockX>false</LockX>
       <LockY>false</LockY>
@@ -2119,509 +574,1427 @@ output=input;implementation_end;
       <LockYYaw>false</LockYYaw>
       <LockZRoll>false</LockZRoll>
       <Childs>
+       <Light>
+        <ShowReferenceFrame>false</ShowReferenceFrame>
+        <Name>Ambient</Name>
+        <Position></Position>
+        <Orientation>
+         <ZAxis>
+     <Z>
+      <Value>1</Value>
+     </Z>
+         </ZAxis>
+         <YAxis>
+     <Y>
+      <Value>1</Value>
+     </Y>
+         </YAxis>
+         <OrientationType>Direct3D</OrientationType>
+        </Orientation>
+        <LockX>false</LockX>
+        <LockY>false</LockY>
+        <LockZ>false</LockZ>
+        <LockXPitch>false</LockXPitch>
+        <LockYYaw>false</LockYYaw>
+        <LockZRoll>false</LockZRoll>
+        <Childs></Childs>
+        <LightType>0</LightType>
+        <LightColor>
+         <Color>
+     <X>
+      <Value>0.3</Value>
+     </X>
+     <Y>
+      <Value>0.3</Value>
+     </Y>
+     <Z>
+      <Value>0.3</Value>
+     </Z>
+         </Color>
+         <Offset></Offset>
+         <Multipliers>
+     <X>
+      <Value>1</Value>
+     </X>
+     <Y>
+      <Value>1</Value>
+     </Y>
+     <Z>
+      <Value>1</Value>
+     </Z>
+         </Multipliers>
+         <Direct3DColorRange>true</Direct3DColorRange>
+        </LightColor>
+        <AmbientLight>
+         <Color>
+     <X>
+      <Value>0.3</Value>
+     </X>
+     <Y>
+      <Value>0.3</Value>
+     </Y>
+     <Z>
+      <Value>0.3</Value>
+     </Z>
+         </Color>
+         <Offset></Offset>
+         <Multipliers>
+     <X>
+      <Value>1</Value>
+     </X>
+     <Y>
+      <Value>1</Value>
+     </Y>
+     <Z>
+      <Value>1</Value>
+     </Z>
+         </Multipliers>
+         <Direct3DColorRange>true</Direct3DColorRange>
+        </AmbientLight>
+        <AmbientOn>true</AmbientOn>
+        <DiffuseOn>false</DiffuseOn>
+        <SpecularOn>false</SpecularOn>
+       </Light>
+       <Light>
+        <ShowReferenceFrame>false</ShowReferenceFrame>
+        <Name>Parallel</Name>
+        <Position>
+         <X>
+     <Value>-3</Value>
+         </X>
+         <Y>
+     <Value>5</Value>
+         </Y>
+         <Z>
+     <Value>3</Value>
+         </Z>
+        </Position>
+        <Orientation>
+         <ZAxis>
+     <X>
+      <Value>0.457495710997814</Value>
+     </X>
+     <Y>
+      <Value>-0.762492851663023</Value>
+     </Y>
+     <Z>
+      <Value>-0.457495710997814</Value>
+     </Z>
+         </ZAxis>
+         <YAxis>
+     <X>
+      <Value>0.235379601434674</Value>
+     </X>
+     <Y>
+      <Value>-0.392299335724456</Value>
+     </Y>
+     <Z>
+      <Value>0.889211827642101</Value>
+     </Z>
+         </YAxis>
+         <OrientationType>Direct3D</OrientationType>
+        </Orientation>
+        <LockX>false</LockX>
+        <LockY>false</LockY>
+        <LockZ>false</LockZ>
+        <LockXPitch>false</LockXPitch>
+        <LockYYaw>false</LockYYaw>
+        <LockZRoll>false</LockZRoll>
+        <Childs></Childs>
+        <LightType>3</LightType>
+        <LightColor>
+         <Color>
+     <X>
+      <Value>0.5</Value>
+     </X>
+     <Y>
+      <Value>0.5</Value>
+     </Y>
+     <Z>
+      <Value>0.5</Value>
+     </Z>
+         </Color>
+         <Offset></Offset>
+         <Multipliers>
+     <X>
+      <Value>1</Value>
+     </X>
+     <Y>
+      <Value>1</Value>
+     </Y>
+     <Z>
+      <Value>1</Value>
+     </Z>
+         </Multipliers>
+         <Direct3DColorRange>true</Direct3DColorRange>
+        </LightColor>
+        <Attenuation>
+         <Constant>
+     <Value>1</Value>
+         </Constant>
+         <Linear>
+     <Value>0</Value>
+         </Linear>
+         <Quadratic>
+     <Value>0</Value>
+         </Quadratic>
+        </Attenuation>
+        <DiffuseLight>
+         <Color>
+     <X>
+      <Value>0.5</Value>
+     </X>
+     <Y>
+      <Value>0.5</Value>
+     </Y>
+     <Z>
+      <Value>0.5</Value>
+     </Z>
+         </Color>
+         <Offset></Offset>
+         <Multipliers>
+     <X>
+      <Value>1</Value>
+     </X>
+     <Y>
+      <Value>1</Value>
+     </Y>
+     <Z>
+      <Value>1</Value>
+     </Z>
+         </Multipliers>
+         <Direct3DColorRange>true</Direct3DColorRange>
+        </DiffuseLight>
+        <SpecularLight>
+         <Color>
+     <X>
+      <Value>0.5</Value>
+     </X>
+     <Y>
+      <Value>0.5</Value>
+     </Y>
+     <Z>
+      <Value>0.5</Value>
+     </Z>
+         </Color>
+         <Offset></Offset>
+         <Multipliers>
+     <X>
+      <Value>1</Value>
+     </X>
+     <Y>
+      <Value>1</Value>
+     </Y>
+     <Z>
+      <Value>1</Value>
+     </Z>
+         </Multipliers>
+         <Direct3DColorRange>true</Direct3DColorRange>
+        </SpecularLight>
+        <AmbientOn>false</AmbientOn>
+        <DiffuseOn>true</DiffuseOn>
+        <SpecularOn>true</SpecularOn>
+       </Light>
+       <Light>
+        <ShowReferenceFrame>false</ShowReferenceFrame>
+        <Name>Spot Light 1</Name>
+        <Position>
+         <X>
+     <Value>-3</Value>
+         </X>
+         <Y>
+     <Value>-5</Value>
+         </Y>
+         <Z>
+     <Value>1</Value>
+         </Z>
+        </Position>
+        <Orientation>
+         <ZAxis>
+     <X>
+      <Value>0.50709255283711</Value>
+     </X>
+     <Y>
+      <Value>0.845154254728517</Value>
+     </Y>
+     <Z>
+      <Value>-0.169030850945703</Value>
+     </Z>
+         </ZAxis>
+         <YAxis>
+     <X>
+      <Value>0.0869656553478673</Value>
+     </X>
+     <Y>
+      <Value>0.144942758913112</Value>
+     </Y>
+     <Z>
+      <Value>0.985610760609162</Value>
+     </Z>
+         </YAxis>
+         <OrientationType>Direct3D</OrientationType>
+        </Orientation>
+        <LockX>false</LockX>
+        <LockY>false</LockY>
+        <LockZ>false</LockZ>
+        <LockXPitch>false</LockXPitch>
+        <LockYYaw>false</LockYYaw>
+        <LockZRoll>false</LockZRoll>
+        <Childs></Childs>
+        <LightType>2</LightType>
+        <LightColor>
+         <Color>
+     <X>
+      <Value>0.5</Value>
+     </X>
+     <Y>
+      <Value>0.5</Value>
+     </Y>
+     <Z>
+      <Value>0.5</Value>
+     </Z>
+         </Color>
+         <Offset></Offset>
+         <Multipliers>
+     <X>
+      <Value>1</Value>
+     </X>
+     <Y>
+      <Value>1</Value>
+     </Y>
+     <Z>
+      <Value>1</Value>
+     </Z>
+         </Multipliers>
+         <Direct3DColorRange>true</Direct3DColorRange>
+        </LightColor>
+        <Attenuation>
+         <Constant>
+     <Value>1</Value>
+         </Constant>
+         <Linear>
+     <Value>0.05</Value>
+         </Linear>
+         <Quadratic>
+     <Value>0.05</Value>
+         </Quadratic>
+        </Attenuation>
+        <Umbra>
+         <Value>1.0471975511966</Value>
+        </Umbra>
+        <Penumbra>
+         <Value>1.0471975511966</Value>
+        </Penumbra>
+        <DiffuseLight>
+         <Color>
+     <X>
+      <Value>0.5</Value>
+     </X>
+     <Y>
+      <Value>0.5</Value>
+     </Y>
+     <Z>
+      <Value>0.5</Value>
+     </Z>
+         </Color>
+         <Offset></Offset>
+         <Multipliers>
+     <X>
+      <Value>1</Value>
+     </X>
+     <Y>
+      <Value>1</Value>
+     </Y>
+     <Z>
+      <Value>1</Value>
+     </Z>
+         </Multipliers>
+         <Direct3DColorRange>true</Direct3DColorRange>
+        </DiffuseLight>
+        <SpecularLight>
+         <Color>
+     <X>
+      <Value>0.5</Value>
+     </X>
+     <Y>
+      <Value>0.5</Value>
+     </Y>
+     <Z>
+      <Value>0.5</Value>
+     </Z>
+         </Color>
+         <Offset></Offset>
+         <Multipliers>
+     <X>
+      <Value>1</Value>
+     </X>
+     <Y>
+      <Value>1</Value>
+     </Y>
+     <Z>
+      <Value>1</Value>
+     </Z>
+         </Multipliers>
+         <Direct3DColorRange>true</Direct3DColorRange>
+        </SpecularLight>
+        <AmbientOn>false</AmbientOn>
+        <DiffuseOn>true</DiffuseOn>
+        <SpecularOn>true</SpecularOn>
+       </Light>
+       <Light>
+        <ShowReferenceFrame>false</ShowReferenceFrame>
+        <Name>Spot Light 2</Name>
+        <Position>
+         <X>
+     <Value>2</Value>
+         </X>
+         <Y>
+     <Value>-3</Value>
+         </Y>
+         <Z>
+     <Value>-1</Value>
+         </Z>
+        </Position>
+        <Orientation>
+         <ZAxis>
+     <X>
+      <Value>-0.534522483824849</Value>
+     </X>
+     <Y>
+      <Value>0.801783725737273</Value>
+     </Y>
+     <Z>
+      <Value>0.267261241912424</Value>
+     </Z>
+         </ZAxis>
+         <YAxis>
+     <X>
+      <Value>0.14824986333222</Value>
+     </X>
+     <Y>
+      <Value>-0.22237479499833</Value>
+     </Y>
+     <Z>
+      <Value>0.963624111659432</Value>
+     </Z>
+         </YAxis>
+         <OrientationType>Direct3D</OrientationType>
+        </Orientation>
+        <LockX>false</LockX>
+        <LockY>false</LockY>
+        <LockZ>false</LockZ>
+        <LockXPitch>false</LockXPitch>
+        <LockYYaw>false</LockYYaw>
+        <LockZRoll>false</LockZRoll>
+        <Childs></Childs>
+        <LightType>2</LightType>
+        <LightColor>
+         <Color>
+     <X>
+      <Value>1</Value>
+     </X>
+     <Y>
+      <Value>1</Value>
+     </Y>
+     <Z>
+      <Value>1</Value>
+     </Z>
+         </Color>
+         <Offset></Offset>
+         <Multipliers>
+     <X>
+      <Value>1</Value>
+     </X>
+     <Y>
+      <Value>1</Value>
+     </Y>
+     <Z>
+      <Value>1</Value>
+     </Z>
+         </Multipliers>
+         <Direct3DColorRange>true</Direct3DColorRange>
+        </LightColor>
+        <Attenuation>
+         <Constant>
+     <Value>1</Value>
+         </Constant>
+         <Linear>
+     <Value>0.05</Value>
+         </Linear>
+         <Quadratic>
+     <Value>0.05</Value>
+         </Quadratic>
+        </Attenuation>
+        <Umbra>
+         <Value>1.5707963267949</Value>
+        </Umbra>
+        <Penumbra>
+         <Value>1.5707963267949</Value>
+        </Penumbra>
+        <DiffuseLight>
+         <Color>
+     <X>
+      <Value>1</Value>
+     </X>
+     <Y>
+      <Value>1</Value>
+     </Y>
+     <Z>
+      <Value>1</Value>
+     </Z>
+         </Color>
+         <Offset></Offset>
+         <Multipliers>
+     <X>
+      <Value>1</Value>
+     </X>
+     <Y>
+      <Value>1</Value>
+     </Y>
+     <Z>
+      <Value>1</Value>
+     </Z>
+         </Multipliers>
+         <Direct3DColorRange>true</Direct3DColorRange>
+        </DiffuseLight>
+        <SpecularLight>
+         <Color>
+     <X>
+      <Value>0.5</Value>
+     </X>
+     <Y>
+      <Value>0.5</Value>
+     </Y>
+     <Z>
+      <Value>0.5</Value>
+     </Z>
+         </Color>
+         <Offset></Offset>
+         <Multipliers>
+     <X>
+      <Value>1</Value>
+     </X>
+     <Y>
+      <Value>1</Value>
+     </Y>
+     <Z>
+      <Value>1</Value>
+     </Z>
+         </Multipliers>
+         <Direct3DColorRange>true</Direct3DColorRange>
+        </SpecularLight>
+        <AmbientOn>false</AmbientOn>
+        <DiffuseOn>true</DiffuseOn>
+        <SpecularOn>true</SpecularOn>
+       </Light>
+       <Camera>
+        <ShowReferenceFrame>false</ShowReferenceFrame>
+        <Name>Camera Looking at Origin</Name>
+        <Position>
+         <X>
+     <Value>-8.35390477301535</Value>
+         </X>
+         <Y>
+     <Value>0.417596142591664</Value>
+         </Y>
+         <Z>
+     <Value>5.10273343464895</Value>
+         </Z>
+        </Position>
+        <Orientation>
+         <ZAxis>
+     <X>
+      <Value>0.852616835570354</Value>
+     </X>
+     <Y>
+      <Value>-0.0426207278293375</Value>
+     </Y>
+     <Z>
+      <Value>-0.520795550347057</Value>
+     </Z>
+         </ZAxis>
+         <YAxis>
+     <X>
+      <Value>0.520146081685539</Value>
+     </X>
+     <Y>
+      <Value>-0.0260011339843951</Value>
+     </Y>
+     <Z>
+      <Value>0.853681436332492</Value>
+     </Z>
+         </YAxis>
+         <OrientationType>Direct3D</OrientationType>
+        </Orientation>
+        <LockX>false</LockX>
+        <LockY>false</LockY>
+        <LockZ>false</LockZ>
+        <LockXPitch>false</LockXPitch>
+        <LockYYaw>false</LockYYaw>
+        <LockZRoll>false</LockZRoll>
+        <Childs></Childs>
+        <FrontPlane>0.01</FrontPlane>
+        <BackPlane>100</BackPlane>
+        <Field>0.00392699081698724</Field>
+        <Fieldy>45</Fieldy>
+        <PlaneLeft>-10</PlaneLeft>
+        <PlaneRight>10</PlaneRight>
+        <PlaneTop>10</PlaneTop>
+        <PlaneBottom>-10</PlaneBottom>
+        <UseLookatPosition>true</UseLookatPosition>
+        <LookatPosition></LookatPosition>
+        <UseAlwaysLookUp>true</UseAlwaysLookUp>
+        <LookUpVector>
+         <Z>
+     <Value>1</Value>
+         </Z>
+        </LookUpVector>
+        <RightHand>true</RightHand>
+        <Perspective>true</Perspective>
+        <IsSelectedCamera>true</IsSelectedCamera>
+       </Camera>
+       <Camera>
+        <ShowReferenceFrame>false</ShowReferenceFrame>
+        <Name>Front(XY)-Camera</Name>
+        <Position>
+         <Z>
+     <Value>10</Value>
+         </Z>
+        </Position>
+        <Orientation>
+         <ZAxis>
+     <Z>
+      <Value>-1</Value>
+     </Z>
+         </ZAxis>
+         <YAxis>
+     <Y>
+      <Value>1</Value>
+     </Y>
+         </YAxis>
+         <OrientationType>Direct3D</OrientationType>
+        </Orientation>
+        <LockX>false</LockX>
+        <LockY>false</LockY>
+        <LockZ>false</LockZ>
+        <LockXPitch>false</LockXPitch>
+        <LockYYaw>false</LockYYaw>
+        <LockZRoll>false</LockZRoll>
+        <Childs></Childs>
+        <FrontPlane>0.01</FrontPlane>
+        <BackPlane>100</BackPlane>
+        <Field>10</Field>
+        <Fieldy>45</Fieldy>
+        <PlaneLeft>-10</PlaneLeft>
+        <PlaneRight>10</PlaneRight>
+        <PlaneTop>10</PlaneTop>
+        <PlaneBottom>-10</PlaneBottom>
+        <UseLookatPosition>true</UseLookatPosition>
+        <LookatPosition></LookatPosition>
+        <UseAlwaysLookUp>true</UseAlwaysLookUp>
+        <LookUpVector>
+         <Y>
+     <Value>1</Value>
+         </Y>
+        </LookUpVector>
+        <RightHand>true</RightHand>
+        <Perspective>false</Perspective>
+        <IsSelectedCamera>false</IsSelectedCamera>
+       </Camera>
+       <Camera>
+        <ShowReferenceFrame>false</ShowReferenceFrame>
+        <Name>Side(YZ)-Camera</Name>
+        <Position>
+         <X>
+     <Value>10</Value>
+         </X>
+        </Position>
+        <Orientation>
+         <ZAxis>
+     <X>
+      <Value>-1</Value>
+     </X>
+         </ZAxis>
+         <YAxis>
+     <Z>
+      <Value>1</Value>
+     </Z>
+         </YAxis>
+         <OrientationType>Direct3D</OrientationType>
+        </Orientation>
+        <LockX>false</LockX>
+        <LockY>false</LockY>
+        <LockZ>false</LockZ>
+        <LockXPitch>false</LockXPitch>
+        <LockYYaw>false</LockYYaw>
+        <LockZRoll>false</LockZRoll>
+        <Childs></Childs>
+        <FrontPlane>0.01</FrontPlane>
+        <BackPlane>100</BackPlane>
+        <Field>10</Field>
+        <Fieldy>45</Fieldy>
+        <PlaneLeft>-10</PlaneLeft>
+        <PlaneRight>10</PlaneRight>
+        <PlaneTop>10</PlaneTop>
+        <PlaneBottom>-10</PlaneBottom>
+        <UseLookatPosition>true</UseLookatPosition>
+        <LookatPosition></LookatPosition>
+        <UseAlwaysLookUp>true</UseAlwaysLookUp>
+        <LookUpVector>
+         <Z>
+     <Value>1</Value>
+         </Z>
+        </LookUpVector>
+        <RightHand>true</RightHand>
+        <Perspective>false</Perspective>
+        <IsSelectedCamera>false</IsSelectedCamera>
+       </Camera>
+       <Camera>
+        <ShowReferenceFrame>false</ShowReferenceFrame>
+        <Name>Top(XZ)-Camera</Name>
+        <Position>
+         <Y>
+     <Value>10</Value>
+         </Y>
+        </Position>
+        <Orientation>
+         <ZAxis>
+     <Y>
+      <Value>-1</Value>
+     </Y>
+         </ZAxis>
+         <YAxis>
+     <X>
+      <Value>1</Value>
+     </X>
+         </YAxis>
+         <OrientationType>Direct3D</OrientationType>
+        </Orientation>
+        <LockX>false</LockX>
+        <LockY>false</LockY>
+        <LockZ>false</LockZ>
+        <LockXPitch>false</LockXPitch>
+        <LockYYaw>false</LockYYaw>
+        <LockZRoll>false</LockZRoll>
+        <Childs></Childs>
+        <FrontPlane>0.01</FrontPlane>
+        <BackPlane>100</BackPlane>
+        <Field>10</Field>
+        <Fieldy>45</Fieldy>
+        <PlaneLeft>-10</PlaneLeft>
+        <PlaneRight>10</PlaneRight>
+        <PlaneTop>10</PlaneTop>
+        <PlaneBottom>-10</PlaneBottom>
+        <UseLookatPosition>true</UseLookatPosition>
+        <LookatPosition></LookatPosition>
+        <UseAlwaysLookUp>true</UseAlwaysLookUp>
+        <LookUpVector>
+         <X>
+     <Value>1</Value>
+         </X>
+        </LookUpVector>
+        <RightHand>true</RightHand>
+        <Perspective>false</Perspective>
+        <IsSelectedCamera>false</IsSelectedCamera>
+       </Camera>
+      </Childs>
+     </Frame>
+     <Frame>
+      <ScaleValue>
+       <X>
+        <Value>1</Value>
+       </X>
+       <Y>
+        <Value>1</Value>
+       </Y>
+       <Z>
+        <Value>1</Value>
+       </Z>
+      </ScaleValue>
+      <ShowReferenceFrame>false</ShowReferenceFrame>
+      <Name>Scenery</Name>
+      <Position></Position>
+      <Orientation>
+       <Angles></Angles>
+       <OrientationType>Bryant</OrientationType>
+      </Orientation>
+      <LockX>false</LockX>
+      <LockY>false</LockY>
+      <LockZ>false</LockZ>
+      <LockXPitch>false</LockXPitch>
+      <LockYYaw>false</LockYYaw>
+      <LockZRoll>false</LockZRoll>
+      <Childs>
+       <Cube>
+        <Center>Center</Center>
+        <RibLength>1</RibLength>
+        <ShowInnerSide>true</ShowInnerSide>
+        <Accuracy>4</Accuracy>
+        <ScaleValue>
+         <X>
+     <Value>1</Value>
+         </X>
+         <Y>
+     <Value>1</Value>
+         </Y>
+         <Z>
+     <Value>1</Value>
+         </Z>
+        </ScaleValue>
+        <OverrideColor>true</OverrideColor>
+        <MeshColor>
+         <X>
+     <Value>1</Value>
+         </X>
+         <Y>
+     <Value>1</Value>
+         </Y>
+         <Z>
+     <Value>1</Value>
+         </Z>
+        </MeshColor>
+        <Alpha>1</Alpha>
+        <MeshColorMultipliers>
+         <X>
+     <Value>1</Value>
+         </X>
+         <Y>
+     <Value>1</Value>
+         </Y>
+         <Z>
+     <Value>1</Value>
+         </Z>
+        </MeshColorMultipliers>
+        <MeshColorOffsets></MeshColorOffsets>
+        <Direct3DColorRange>true</Direct3DColorRange>
+        <SpecularColor>
+         <X>
+     <Value>0.5</Value>
+         </X>
+         <Y>
+     <Value>0.5</Value>
+         </Y>
+         <Z>
+     <Value>0.5</Value>
+         </Z>
+        </SpecularColor>
+        <EmissiveColor></EmissiveColor>
+        <ShininessPower>
+         <Value>15</Value>
+        </ShininessPower>
+        <OverrideQuality>false</OverrideQuality>
+        <ShowReferenceFrame>true</ShowReferenceFrame>
+        <Name>Block</Name>
+        <Position>
+         <X>
+     <VariableName>Mass_model\Hpos0[1,4]</VariableName>
+     <Value>0.0659246260059107</Value>
+         </X>
+         <Y>
+     <VariableName>Mass_model\Hpos0[2,4]</VariableName>
+     <Value>-0.0659246260059101</Value>
+         </Y>
+         <Z>
+     <VariableName>Mass_model\Hpos0[3,4]</VariableName>
+     <Value>0.0659246260059101</Value>
+         </Z>
+        </Position>
+        <Orientation>
+         <ZAxis>
+     <X>
+      <VariableName>Mass_model\Hpos0[1,3]</VariableName>
+      <Value>0.895648987591683</Value>
+     </X>
+     <Y>
+      <VariableName>Mass_model\Hpos0[2,3]</VariableName>
+      <Value>0.25796020935491</Value>
+     </Y>
+     <Z>
+      <VariableName>Mass_model\Hpos0[3,3]</VariableName>
+      <Value>0.362311221763229</Value>
+     </Z>
+         </ZAxis>
+         <YAxis>
+     <X>
+      <VariableName>Mass_model\Hpos0[1,2]</VariableName>
+      <Value>0.257960209354912</Value>
+     </X>
+     <Y>
+      <VariableName>Mass_model\Hpos0[2,2]</VariableName>
+      <Value>0.36231122176323</Value>
+     </Y>
+     <Z>
+      <VariableName>Mass_model\Hpos0[3,2]</VariableName>
+      <Value>-0.895648987591682</Value>
+     </Z>
+         </YAxis>
+         <OrientationType>Matrix</OrientationType>
+        </Orientation>
+        <LockX>false</LockX>
+        <LockY>false</LockY>
+        <LockZ>false</LockZ>
+        <LockXPitch>false</LockXPitch>
+        <LockYYaw>false</LockYYaw>
+        <LockZRoll>false</LockZRoll>
+        <Childs></Childs>
+       </Cube>
+       <Frame>
+        <ScaleValue>
+         <X>
+     <Value>0.5</Value>
+         </X>
+         <Y>
+     <Value>0.5</Value>
+         </Y>
+         <Z>
+     <Value>0.5</Value>
+         </Z>
+        </ScaleValue>
+        <ShowReferenceFrame>true</ShowReferenceFrame>
+        <Name>Reference Frame</Name>
+        <Position>
+         <X>
+     <VariableName>YouBot\input[1,4]</VariableName>
+     <Value>0.0659246260059107</Value>
+         </X>
+         <Y>
+     <VariableName>YouBot\input[2,4]</VariableName>
+     <Value>-0.0659246260059101</Value>
+         </Y>
+         <Z>
+     <VariableName>YouBot\input[3,4]</VariableName>
+     <Value>0.0659246260059101</Value>
+         </Z>
+        </Position>
+        <Orientation>
+         <ZAxis>
+     <X>
+      <VariableName>YouBot\input[1,3]</VariableName>
+      <Value>0.895648987591683</Value>
+     </X>
+     <Y>
+      <VariableName>YouBot\input[2,3]</VariableName>
+      <Value>0.25796020935491</Value>
+     </Y>
+     <Z>
+      <VariableName>YouBot\input[3,3]</VariableName>
+      <Value>0.362311221763229</Value>
+     </Z>
+         </ZAxis>
+         <YAxis>
+     <X>
+      <VariableName>YouBot\input[1,2]</VariableName>
+      <Value>0.257960209354912</Value>
+     </X>
+     <Y>
+      <VariableName>YouBot\input[2,2]</VariableName>
+      <Value>0.36231122176323</Value>
+     </Y>
+     <Z>
+      <VariableName>YouBot\input[3,2]</VariableName>
+      <Value>-0.895648987591682</Value>
+     </Z>
+         </YAxis>
+         <OrientationType>Matrix</OrientationType>
+        </Orientation>
+        <LockX>false</LockX>
+        <LockY>false</LockY>
+        <LockZ>false</LockZ>
+        <LockXPitch>false</LockXPitch>
+        <LockYYaw>false</LockYYaw>
+        <LockZRoll>false</LockZRoll>
+        <Childs></Childs>
+       </Frame>
       </Childs>
      </Frame>
          </Childs>
         </Frame>
-       </Childs>
-      </Frame>
-     </MainFrame>
-    </Plot>
-    <Plot>
-     <PlotType>GraphPlot</PlotType>
-     <BasePlot>
-       <UseWindowsBGColor>true</UseWindowsBGColor>
-       <BGColor>13160660</BGColor>
-     </BasePlot>
-     <Grid>
-      <DrawGrid>true</DrawGrid>
-      <GridColor>15780518</GridColor>
-      <XTicks>10</XTicks>
-      <YTicks>10</YTicks>
-      <ZTicks>10</ZTicks>
-      <Use3DLook>false</Use3DLook>
-     </Grid>
-     <PlotBGColor>16777215</PlotBGColor>
-     <ShowPlotTitle>true</ShowPlotTitle>
-     <TitlePosition>1</TitlePosition>
-     <PlotTitle>model</PlotTitle>
-     <ShowXValues>true</ShowXValues>
-     <Fonts>
-      <TitleFont>
-       <Name>Arial</Name>
-       <Height>12</Height>
-       <PitchFamily>34</PitchFamily>
-       <Weight>400</Weight>
-       <Italic>0</Italic>
-       <UnderLine>0</UnderLine>
-       <StrikeOut>0</StrikeOut>
-       <Color>0</Color>
-      </TitleFont>
-      <LabelFont>
-       <Name>Arial</Name>
-       <Height>12</Height>
-       <PitchFamily>34</PitchFamily>
-       <Weight>400</Weight>
-       <Italic>0</Italic>
-       <UnderLine>0</UnderLine>
-       <StrikeOut>0</StrikeOut>
-       <Color>0</Color>
-      </LabelFont>
-      <ValuesFont>
-       <Name>Arial</Name>
-       <Height>10</Height>
-       <PitchFamily>34</PitchFamily>
-       <Weight>400</Weight>
-       <Italic>0</Italic>
-       <UnderLine>0</UnderLine>
-       <StrikeOut>0</StrikeOut>
-       <Color>0</Color>
-      </ValuesFont>
-     </Fonts>
-     <SharedXAxis>true</SharedXAxis>
-     <SharedYAxis>true</SharedYAxis>
-     <SharedZAxis>false</SharedZAxis>
-     <XAxes>
-      <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>17.3039999999982</Maximum>
-       <Linear>true</Linear>
-       <Scaling>3</Scaling>
-       <Label>time</Label>
-      </Axis>
-     </XAxes>
-     <YAxes>
-      <Axis>
-       <Minimum>-0.5</Minimum>
-       <Maximum>0.5</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>Test\Submodel1\T[1]</Label>
-      </Axis>
-      <Axis>
-       <Minimum>-0.5</Minimum>
-       <Maximum>0.5</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>Test\Submodel1\T[2]</Label>
-      </Axis>
-      <Axis>
-       <Minimum>-0.5</Minimum>
-       <Maximum>0.5</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>Test\Submodel1\T[3]</Label>
-      </Axis>
-      <Axis>
-       <Minimum>-0.5</Minimum>
-       <Maximum>0.5</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>Test\Submodel1\T[4]</Label>
-      </Axis>
-      <Axis>
-       <Minimum>-0.5</Minimum>
-       <Maximum>0.5</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>Test\Submodel1\T[5]</Label>
-      </Axis>
-      <Axis>
-       <Minimum>-0.5</Minimum>
-       <Maximum>0.5</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>Test\Submodel1\T[6]</Label>
-      </Axis>
-      <Axis>
-       <Minimum>-0.5</Minimum>
-       <Maximum>0.5</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>dotH[1,1]</Label>
-      </Axis>
-      <Axis>
-       <Minimum>-0.5</Minimum>
-       <Maximum>0.5</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>dotH[1,2]</Label>
-      </Axis>
-      <Axis>
-       <Minimum>-0.5</Minimum>
-       <Maximum>0.5</Maximum>
-       <Linear>true</Linear>
-       <Scaling>1</Scaling>
-       <Label>dotH[1,3]</Label>
-      </Axis>
-     </YAxes>
-     <ZAxes>
-     </ZAxes>
-     <Curves>
-      <Curve>
-       <LineColor>16711680</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>16711680</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Submodel1\T[1]</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>16711935</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>16711935</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Submodel1\T[2]</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>255</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>255</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Submodel1\T[3]</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>65280</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>65280</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Submodel1\T[4]</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>0</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>0</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Submodel1\T[5]</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>10040319</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>10040319</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Submodel1\T[6]</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>16763904</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>16763904</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Submodel1\dotH[1,1]</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>26367</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>26367</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Submodel1\dotH[1,2]</VarName>
-       </YCurveData>
-      </Curve>
-      <Curve>
-       <LineColor>3368448</LineColor>
-       <LineStyle>1</LineStyle>
-       <TickColor>3368448</TickColor>
-       <TickStyle>0</TickStyle>
-       <PixelThresshold>1</PixelThresshold>
-       <LineThickness>1</LineThickness>
-       <LineOrder>1</LineOrder>
-       <ShowYValues>true</ShowYValues>
-       <XCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>time</VarName>
-       </XCurveData>
-       <YCurveData>
-        <ShowUnit>true</ShowUnit>
-        <VarName>Master_haptic\Submodel1\dotH[1,3]</VarName>
-       </YCurveData>
-      </Curve>
-     </Curves>
-     <Legenda>
-      <ShowLegenda>true</ShowLegenda>
-     </Legenda>
-     <StripChartPlots>
-      <DistributState>2</DistributState>
-      <StripChartPlot>
+       </MainFrame>
+      </Plot>
+      <Plot>
+       <PlotType>GraphPlot</PlotType>
+       <BasePlot>
+        <UseWindowsBGColor>true</UseWindowsBGColor>
+        <BGColor>13160660</BGColor>
+       </BasePlot>
+       <Grid>
+        <DrawGrid>true</DrawGrid>
+        <GridColor>15780518</GridColor>
+        <XTicks>10</XTicks>
+        <YTicks>10</YTicks>
+        <ZTicks>10</ZTicks>
+        <Use3DLook>false</Use3DLook>
+       </Grid>
+       <PlotBGColor>16777215</PlotBGColor>
+       <ShowPlotTitle>true</ShowPlotTitle>
+       <TitlePosition>1</TitlePosition>
+       <PlotTitle>model</PlotTitle>
+       <ShowXValues>true</ShowXValues>
+       <Fonts>
+        <TitleFont>
+         <Name>Arial</Name>
+         <Height>12</Height>
+         <PitchFamily>34</PitchFamily>
+         <Weight>400</Weight>
+         <Italic>0</Italic>
+         <UnderLine>0</UnderLine>
+         <StrikeOut>0</StrikeOut>
+         <Color>0</Color>
+        </TitleFont>
+        <LabelFont>
+         <Name>Arial</Name>
+         <Height>12</Height>
+         <PitchFamily>34</PitchFamily>
+         <Weight>400</Weight>
+         <Italic>0</Italic>
+         <UnderLine>0</UnderLine>
+         <StrikeOut>0</StrikeOut>
+         <Color>0</Color>
+        </LabelFont>
+        <ValuesFont>
+         <Name>Arial</Name>
+         <Height>10</Height>
+         <PitchFamily>34</PitchFamily>
+         <Weight>400</Weight>
+         <Italic>0</Italic>
+         <UnderLine>0</UnderLine>
+         <StrikeOut>0</StrikeOut>
+         <Color>0</Color>
+        </ValuesFont>
+       </Fonts>
+       <SharedXAxis>true</SharedXAxis>
+       <SharedYAxis>true</SharedYAxis>
+       <SharedZAxis>false</SharedZAxis>
+       <XAxes>
+        <Axis>
+         <Minimum>0</Minimum>
+         <Maximum>17.3039999999982</Maximum>
+         <Linear>true</Linear>
+         <Scaling>3</Scaling>
+         <Label>time</Label>
+        </Axis>
+       </XAxes>
+       <YAxes>
+        <Axis>
+         <Minimum>-0.5</Minimum>
+         <Maximum>0.5</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>Test\Submodel1\T[1]</Label>
+        </Axis>
+        <Axis>
+         <Minimum>-0.5</Minimum>
+         <Maximum>0.5</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>Test\Submodel1\T[2]</Label>
+        </Axis>
+        <Axis>
+         <Minimum>-0.5</Minimum>
+         <Maximum>0.5</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>Test\Submodel1\T[3]</Label>
+        </Axis>
+        <Axis>
+         <Minimum>-0.5</Minimum>
+         <Maximum>0.5</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>Test\Submodel1\T[4]</Label>
+        </Axis>
+        <Axis>
+         <Minimum>-0.5</Minimum>
+         <Maximum>0.5</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>Test\Submodel1\T[5]</Label>
+        </Axis>
+        <Axis>
+         <Minimum>-0.5</Minimum>
+         <Maximum>0.5</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>Test\Submodel1\T[6]</Label>
+        </Axis>
+        <Axis>
+         <Minimum>-0.5</Minimum>
+         <Maximum>0.5</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>dotH[1,1]</Label>
+        </Axis>
+        <Axis>
+         <Minimum>-0.5</Minimum>
+         <Maximum>0.5</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>dotH[1,2]</Label>
+        </Axis>
+        <Axis>
+         <Minimum>-0.5</Minimum>
+         <Maximum>0.5</Maximum>
+         <Linear>true</Linear>
+         <Scaling>1</Scaling>
+         <Label>dotH[1,3]</Label>
+        </Axis>
+       </YAxes>
+       <ZAxes></ZAxes>
+       <Curves>
+        <Curve>
+         <LineColor>16711680</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>16711680</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Submodel1\T[1]</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>16711935</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>16711935</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Submodel1\T[2]</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>255</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>255</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Submodel1\T[3]</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>65280</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>65280</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Submodel1\T[4]</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>0</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>0</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Submodel1\T[5]</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>10040319</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>10040319</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Submodel1\T[6]</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>16763904</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>16763904</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Submodel1\dotH[1,1]</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>26367</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>26367</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Submodel1\dotH[1,2]</VarName>
+         </YCurveData>
+        </Curve>
+        <Curve>
+         <LineColor>3368448</LineColor>
+         <LineStyle>1</LineStyle>
+         <TickColor>3368448</TickColor>
+         <TickStyle>0</TickStyle>
+         <PixelThresshold>1</PixelThresshold>
+         <LineThickness>1</LineThickness>
+         <LineOrder>1</LineOrder>
+         <ShowYValues>true</ShowYValues>
+         <XCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>time</VarName>
+         </XCurveData>
+         <YCurveData>
+     <ShowUnit>true</ShowUnit>
+     <VarName>Master_haptic\Submodel1\dotH[1,3]</VarName>
+         </YCurveData>
+        </Curve>
+       </Curves>
        <Legenda>
         <ShowLegenda>true</ShowLegenda>
        </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-      <StripChartPlot>
-       <Legenda>
-        <ShowLegenda>true</ShowLegenda>
-       </Legenda>
-      </StripChartPlot>
-     </StripChartPlots>
-    </Plot>
-   </Plots>
-   <WindowRectangles virtualDesktopWidth="1680" virtualDesktopHeight="1050">
-     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1050">
-0.00238095 0.0495238 0.423214 0.784762
-     </WindowRectangle>
-     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1050">
-0.0625 0.0495238 0.353571 0.335238
-     </WindowRectangle>
-     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1050">
-0.458929 0.0495238 0.989881 0.975238
-     </WindowRectangle>
-   </WindowRectangles>
-  </PlotSpecs>
-  <RunSpecs>
-   <SimulatorSettings>
-    <StartTime>0</StartTime>
-    <FinishTime>10</FinishTime>
-    <Warp>false</Warp>
-    <UseOutputAfterEach>false</UseOutputAfterEach>
-    <OutputAfterEach>0.1</OutputAfterEach>
-    <EventEpsilon>1e-006</EventEpsilon>
-    <AlgebraicTolerance>1e-007</AlgebraicTolerance>
-    <SteadyStateAnalysis>false</SteadyStateAnalysis>
-   </SimulatorSettings>
-   <IntegrationMethods>
-    <IntegrationMethod>
-     <Name>Euler</Name>
-     <StepSize>0.01</StepSize>
-    </IntegrationMethod>
-    <IntegrationMethod>
-     <Name>BackwardEuler</Name>
-     <AbsoluteTolerance>1e-005</AbsoluteTolerance>
-     <RelativeTolerance>1e-005</RelativeTolerance>
-     <AlgebraicAbsoluteTolerance>1e-005</AlgebraicAbsoluteTolerance>
-     <AlgebraicRelativeTolerance>1e-005</AlgebraicRelativeTolerance>
-     <StepSize>0.01</StepSize>
-     <Alpha>1</Alpha>
-    </IntegrationMethod>
-    <IntegrationMethod>
-     <Name>AdamsBashforth</Name>
-     <StepSize>0.01</StepSize>
-    </IntegrationMethod>
-    <IntegrationMethod>
-     <Name>RungeKutta2</Name>
-     <StepSize>0.01</StepSize>
-    </IntegrationMethod>
-    <IntegrationMethod>
-     <Name>RungeKutta4</Name>
-     <StepSize>0.001</StepSize>
-    </IntegrationMethod>
-    <IntegrationMethod>
-     <Name>RungeKutta8</Name>
-     <UseInitialStepSize>false</UseInitialStepSize>
-     <InitialStepSize>0</InitialStepSize>
-     <UseMaximumStepSize>false</UseMaximumStepSize>
-     <MaximumStepSize>0</MaximumStepSize>
-     <AbsoluteTolerance>1e-006</AbsoluteTolerance>
-     <RelativeTolerance>1e-006</RelativeTolerance>
-     <SafetyFactor>0.9</SafetyFactor>
-     <Factor1>0.33</Factor1>
-     <Factor2>6</Factor2>
-     <Beta>0</Beta>
-     <UseMaxNrSteps>false</UseMaxNrSteps>
-     <MaxNrSteps>100000</MaxNrSteps>
-     <UseStiffDetection>false</UseStiffDetection>
-     <MaxNrStiffnessSteps>1000</MaxNrStiffnessSteps>
-    </IntegrationMethod>
-    <IntegrationMethod>
-     <Name>RungeKuttaFehlberg</Name>
-     <UseInitialStepSize>false</UseInitialStepSize>
-     <InitialStepSize>0</InitialStepSize>
-     <UseMaximumStepSize>false</UseMaximumStepSize>
-     <MaximumStepSize>0</MaximumStepSize>
-     <AbsoluteTolerance>1e-006</AbsoluteTolerance>
-     <RelativeTolerance>1e-006</RelativeTolerance>
-    </IntegrationMethod>
-    <IntegrationMethod>
-     <Name>VodeAdams</Name>
-     <UseInitialStepSize>false</UseInitialStepSize>
-     <InitialStepSize>0</InitialStepSize>
-     <UseMaximumStepSize>false</UseMaximumStepSize>
-     <MaximumStepSize>0</MaximumStepSize>
-     <AbsoluteTolerance>1e-006</AbsoluteTolerance>
-     <RelativeTolerance>1e-006</RelativeTolerance>
-    </IntegrationMethod>
-    <IntegrationMethod>
-     <Name>BDFMethod</Name>
-     <AbsoluteTolerance>1e-005</AbsoluteTolerance>
-     <RelativeTolerance>1e-005</RelativeTolerance>
-     <AlgebraicAbsoluteTolerance>1e-005</AlgebraicAbsoluteTolerance>
-     <AlgebraicRelativeTolerance>1e-005</AlgebraicRelativeTolerance>
-     <UseInitialStepSize>false</UseInitialStepSize>
-     <InitialStepSize>0</InitialStepSize>
-     <UseMaximumStepSize>false</UseMaximumStepSize>
-     <MaximumStepSize>0</MaximumStepSize>
-     <UseFixedStepSize>false</UseFixedStepSize>
-     <FixedStepSize>0</FixedStepSize>
-    </IntegrationMethod>
-    <IntegrationMethod>
-     <Name>MeBDFiMethod</Name>
-     <AbsoluteTolerance>1e-005</AbsoluteTolerance>
-     <RelativeTolerance>1e-005</RelativeTolerance>
-     <AlgebraicAbsoluteTolerance>1e-005</AlgebraicAbsoluteTolerance>
-     <AlgebraicRelativeTolerance>1e-005</AlgebraicRelativeTolerance>
-     <UseInitialStepSize>false</UseInitialStepSize>
-     <InitialStepSize>0</InitialStepSize>
-     <UseMaximumStepSize>false</UseMaximumStepSize>
-     <MaximumStepSize>0</MaximumStepSize>
-     <UseFixedStepSize>false</UseFixedStepSize>
-     <FixedStepSize>0</FixedStepSize>
-    </IntegrationMethod>
-    <SelectedIntegrationMethod>4</SelectedIntegrationMethod>
-   </IntegrationMethods>
-  </RunSpecs>
-  <MultipleRun>
-   <NrSteps>10</NrSteps>
-   <CopyFromStates>false</CopyFromStates>
-   <JoinParameterVariation>true</JoinParameterVariation>
-   <ClearAfterRun>true</ClearAfterRun>
-   <RedrawAfterRun>false</RedrawAfterRun>
-   <DrawDuringSimulation>true</DrawDuringSimulation>
-   <ActionBeforeOptimization>0</ActionBeforeOptimization>
-   <CompareValue>0</CompareValue>
-   <UseCompareValue>true</UseCompareValue>
-   <MultipleRunType>MultipleRun</MultipleRunType>
-   <Minimize>true</Minimize>
-   <OptimizationVariable></OptimizationVariable>
-   <ResulVarUsage>UseEndValue</ResulVarUsage>
-   <Tolerance>0.001</Tolerance>
-   <OptimizationMethod>BroydonFletcherGoldfarbShanno</OptimizationMethod>
-   <MultipleRunVariables>
-   </MultipleRunVariables>
-  </MultipleRun>
-  <ExportData>
-   <WriteAsText>true</WriteAsText>
-   <ReadAsText>true</ReadAsText>
-   <WriteHeader>true</WriteHeader>
-   <ReadHeader>true</ReadHeader>
-   <ReadFilename></ReadFilename>
-   <WriteFilename></WriteFilename>
-   <DoWrite>false</DoWrite>
-   <ExportVariables>
-   </ExportVariables>
-   <ImportVariables>
-   </ImportVariables>
-  </ExportData>
-  <BreakPoints>
-  </BreakPoints>
-</ExpData>
+       <StripChartPlots>
+        <DistributState>2</DistributState>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+        <StripChartPlot>
+         <Legenda>
+     <ShowLegenda>true</ShowLegenda>
+         </Legenda>
+        </StripChartPlot>
+       </StripChartPlots>
+      </Plot>
+     </Plots>
+     <WindowRectangles virtualDesktopWidth="1680" virtualDesktopHeight="1050">
+      <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1050">0.00238095 0.0495238 0.423214 0.784762</WindowRectangle>
+      <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1050">0.0625 0.0495238 0.353571 0.335238</WindowRectangle>
+      <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1050">0.458929 0.0495238 0.989881 0.975238</WindowRectangle>
+     </WindowRectangles>
+    </PlotSpecs>
+    <RunSpecs>
+     <SimulatorSettings>
+      <StartTime>0</StartTime>
+      <FinishTime>10</FinishTime>
+      <Warp>false</Warp>
+      <UseOutputAfterEach>false</UseOutputAfterEach>
+      <OutputAfterEach>0.1</OutputAfterEach>
+      <EventEpsilon>1e-006</EventEpsilon>
+      <AlgebraicTolerance>1e-007</AlgebraicTolerance>
+      <SteadyStateAnalysis>false</SteadyStateAnalysis>
+     </SimulatorSettings>
+     <IntegrationMethods>
+      <IntegrationMethod>
+       <Name>Euler</Name>
+       <StepSize>0.01</StepSize>
+      </IntegrationMethod>
+      <IntegrationMethod>
+       <Name>BackwardEuler</Name>
+       <AbsoluteTolerance>1e-005</AbsoluteTolerance>
+       <RelativeTolerance>1e-005</RelativeTolerance>
+       <AlgebraicAbsoluteTolerance>1e-005</AlgebraicAbsoluteTolerance>
+       <AlgebraicRelativeTolerance>1e-005</AlgebraicRelativeTolerance>
+       <StepSize>0.01</StepSize>
+       <Alpha>1</Alpha>
+      </IntegrationMethod>
+      <IntegrationMethod>
+       <Name>AdamsBashforth</Name>
+       <StepSize>0.01</StepSize>
+      </IntegrationMethod>
+      <IntegrationMethod>
+       <Name>RungeKutta2</Name>
+       <StepSize>0.01</StepSize>
+      </IntegrationMethod>
+      <IntegrationMethod>
+       <Name>RungeKutta4</Name>
+       <StepSize>0.001</StepSize>
+      </IntegrationMethod>
+      <IntegrationMethod>
+       <Name>RungeKutta8</Name>
+       <UseInitialStepSize>false</UseInitialStepSize>
+       <InitialStepSize>0</InitialStepSize>
+       <UseMaximumStepSize>false</UseMaximumStepSize>
+       <MaximumStepSize>0</MaximumStepSize>
+       <AbsoluteTolerance>1e-006</AbsoluteTolerance>
+       <RelativeTolerance>1e-006</RelativeTolerance>
+       <SafetyFactor>0.9</SafetyFactor>
+       <Factor1>0.33</Factor1>
+       <Factor2>6</Factor2>
+       <Beta>0</Beta>
+       <UseMaxNrSteps>false</UseMaxNrSteps>
+       <MaxNrSteps>100000</MaxNrSteps>
+       <UseStiffDetection>false</UseStiffDetection>
+       <MaxNrStiffnessSteps>1000</MaxNrStiffnessSteps>
+      </IntegrationMethod>
+      <IntegrationMethod>
+       <Name>RungeKuttaFehlberg</Name>
+       <UseInitialStepSize>false</UseInitialStepSize>
+       <InitialStepSize>0</InitialStepSize>
+       <UseMaximumStepSize>false</UseMaximumStepSize>
+       <MaximumStepSize>0</MaximumStepSize>
+       <AbsoluteTolerance>1e-006</AbsoluteTolerance>
+       <RelativeTolerance>1e-006</RelativeTolerance>
+      </IntegrationMethod>
+      <IntegrationMethod>
+       <Name>VodeAdams</Name>
+       <UseInitialStepSize>false</UseInitialStepSize>
+       <InitialStepSize>0</InitialStepSize>
+       <UseMaximumStepSize>false</UseMaximumStepSize>
+       <MaximumStepSize>0</MaximumStepSize>
+       <AbsoluteTolerance>1e-006</AbsoluteTolerance>
+       <RelativeTolerance>1e-006</RelativeTolerance>
+      </IntegrationMethod>
+      <IntegrationMethod>
+       <Name>BDFMethod</Name>
+       <AbsoluteTolerance>1e-005</AbsoluteTolerance>
+       <RelativeTolerance>1e-005</RelativeTolerance>
+       <AlgebraicAbsoluteTolerance>1e-005</AlgebraicAbsoluteTolerance>
+       <AlgebraicRelativeTolerance>1e-005</AlgebraicRelativeTolerance>
+       <UseInitialStepSize>false</UseInitialStepSize>
+       <InitialStepSize>0</InitialStepSize>
+       <UseMaximumStepSize>false</UseMaximumStepSize>
+       <MaximumStepSize>0</MaximumStepSize>
+       <UseFixedStepSize>false</UseFixedStepSize>
+       <FixedStepSize>0</FixedStepSize>
+      </IntegrationMethod>
+      <IntegrationMethod>
+       <Name>MeBDFiMethod</Name>
+       <AbsoluteTolerance>1e-005</AbsoluteTolerance>
+       <RelativeTolerance>1e-005</RelativeTolerance>
+       <AlgebraicAbsoluteTolerance>1e-005</AlgebraicAbsoluteTolerance>
+       <AlgebraicRelativeTolerance>1e-005</AlgebraicRelativeTolerance>
+       <UseInitialStepSize>false</UseInitialStepSize>
+       <InitialStepSize>0</InitialStepSize>
+       <UseMaximumStepSize>false</UseMaximumStepSize>
+       <MaximumStepSize>0</MaximumStepSize>
+       <UseFixedStepSize>false</UseFixedStepSize>
+       <FixedStepSize>0</FixedStepSize>
+      </IntegrationMethod>
+      <SelectedIntegrationMethod>4</SelectedIntegrationMethod>
+     </IntegrationMethods>
+    </RunSpecs>
+    <MultipleRun>
+     <NrSteps>10</NrSteps>
+     <CopyFromStates>false</CopyFromStates>
+     <JoinParameterVariation>true</JoinParameterVariation>
+     <ClearAfterRun>true</ClearAfterRun>
+     <RedrawAfterRun>false</RedrawAfterRun>
+     <DrawDuringSimulation>true</DrawDuringSimulation>
+     <ActionBeforeOptimization>0</ActionBeforeOptimization>
+     <CompareValue>0</CompareValue>
+     <UseCompareValue>true</UseCompareValue>
+     <MultipleRunType>MultipleRun</MultipleRunType>
+     <Minimize>true</Minimize>
+     <OptimizationVariable></OptimizationVariable>
+     <ResulVarUsage>UseEndValue</ResulVarUsage>
+     <Tolerance>0.001</Tolerance>
+     <OptimizationMethod>BroydonFletcherGoldfarbShanno</OptimizationMethod>
+     <MultipleRunVariables></MultipleRunVariables>
+    </MultipleRun>
+    <ExportData>
+     <WriteAsText>true</WriteAsText>
+     <ReadAsText>true</ReadAsText>
+     <WriteHeader>true</WriteHeader>
+     <ReadHeader>true</ReadHeader>
+     <ReadFilename></ReadFilename>
+     <WriteFilename></WriteFilename>
+     <DoWrite>false</DoWrite>
+     <ExportVariables></ExportVariables>
+     <ImportVariables></ImportVariables>
+    </ExportData>
+    <BreakPoints></BreakPoints>
+   </ExpData>
   </Experiment>
-</Experiments>
+ </Experiments>
 </Document>
