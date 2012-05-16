@@ -6,8 +6,8 @@
    <Version>4.1</Version>
 <IsMainModel>0</IsMainModel>
  <KeepParameterValues>False</KeepParameterValues>
-   <LibraryPath>Z:\Users\yury\workspaces\20SimModels\Automatica\youbot_control_d_sefltest_POPC.emx</LibraryPath>
-  <TimeStamp>2012-5-16 13:55:27</TimeStamp>
+   <LibraryPath>Z:\home\youbot\DEV\20SimModels\Automatica\youbot_control_d_sefltest_POPC.emx</LibraryPath>
+  <TimeStamp>2012-5-16 16:04:27</TimeStamp>
 </Description>';
  type 'Mainmodel-8044'
  end;
@@ -243,7 +243,7 @@ equations
 	
 
 implementation_end;
-      FilterButterworth 512 416
+      FilterButterworth 512 424
        description '<Description>
  <Version>4.0</Version>
  <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>
@@ -261,8 +261,8 @@ implementation_end;
 parameters
 // Gains for 2nd order low-pass Butterworth filter
 	//real  FilterGain[2,3] = [0.0675, 0.1349, 0.0675; 1.143, -0.4128,0];				// Cut-off frequency 100 Hz
-     real  FilterGain[2,3] = [0.0201, 0.0402, 0.0201; 1.561, -0.6414,0]; 		//Cut-off 50 Hz
-	//real  FilterGain[2,3] = [0.0055, 0.0111, 0.0055; 1.7786, -0.8008,0];			// Cut-off frequency  25 Hz
+   //real  FilterGain[2,3] = [0.0201, 0.0402, 0.0201; 1.561, -0.6414,0]; 		//Cut-off 50 Hz
+	real  FilterGain[2,3] = [0.0055, 0.0111, 0.0055; 1.7786, -0.8008,0];			// Cut-off frequency  25 Hz
 	//real  FilterGain[2,3] = [2.414e-4, 4.827e-4, 2.414e-4; 1.9556, -0.9565,0];	// Cut-off frequency   5 Hz
 	
 variables
@@ -435,7 +435,7 @@ initialequations
 	dotH=0;
 equations
 	dotH=tilde(Twist)*H;
-	H=H + dotH;
+	H=H + dotH*sampletime;
 	Hjoy0=H;implementation_end;
       Negate 440 160
        description '<Description><Version>4.0</Version><IsMainModel>1</IsMainModel><KeepParameterValues>False</KeepParameterValues>
@@ -508,9 +508,9 @@ equations
        end;
        implementation eq
 parameters
-	real H_active_dumping=50;
+	real H_active_dumping=15;
 	real H_cut_off=10;
-	real alpha=1;// recovery multiplier 
+	real alpha= 0;// recovery multiplier 
 variables
 	real d;
 	real torque_tcl[6];//recovery torque
@@ -551,7 +551,7 @@ code
        end;
        implementation eq
 parameters
-	real beta=0.01;
+	real beta=0.1;
 	real H_min=20;
 variables
 	real dH; 
@@ -903,14 +903,6 @@ equations
      end;
      connections
       CartesianSpaceStiffness1\effort -> Splitter7\input;
-      Initializer1\output -> Submodel1\Input2;
-      Submodel2\Output -> Hout0;
-      HJoym -> Initializer1\input;
-      Initializer\output -> Submodel4\Input2;
-      Rate_control\Houtput -> Submodel3\Input2;
-      Negate\output -> Submodel4\Input1;
-      Splitter2\output -> HJoy0 472 151.5;
-      Hytip0 -> Initializer\input;
       FilterButterworth\output -> Splitter8\input;
       Splitter7\output -> PC\inW;
       JoyRate\Hjoy0 -> Splitter10\input;
@@ -921,6 +913,7 @@ equations
       Splitter5\output -> Splitter1\input;
       Splitter1\output -> Rate_control\Hinput;
       Splitter10\output -> Submodel3\Input1;
+      Initializer1\output -> Submodel1\Input2;
       Splitter10\output -> Odometry\H 528 248;
       Splitter8\output -> PC\T;
       Odometry\Odom -> JointSetpoint;
@@ -931,6 +924,7 @@ equations
       Splitter7\output -> PO\W;
       Splitter2\output -> Submodel1\Input1;
       Splitter5\output -> CartesianSpaceStiffness1\Htip0;
+      Submodel2\Output -> Hout0;
       outH <- Impulse_encoder\output;
       Impule_decoder\output -> PO\IdH;
       Submodel1\Output -> Splitter4\input;
@@ -941,7 +935,13 @@ equations
       PC\outW -> effort;
       Splitter5\output -> DiscreeteDH\H10;
       Htip0 -> Splitter5\input;
+      HJoym -> Initializer1\input;
       Splitter8\output -> PO\T;
+      Initializer\output -> Submodel4\Input2;
+      Rate_control\Houtput -> Submodel3\Input2;
+      Negate\output -> Submodel4\Input1;
+      Splitter2\output -> HJoy0 472 151.5;
+      Hytip0 -> Initializer\input;
      end;
     implementation_end;
    Hold1 848 272
@@ -1007,7 +1007,7 @@ parameters
 equations
 	output = hold (input, initial);
          implementation_end;
-   HtipCC 576 208
+   HtipCC 584 216
     description '<Description>
  <Version>4.0</Version>
  <IsMainModel>1</IsMainModel>
@@ -1022,10 +1022,10 @@ equations
     end;
     icon bg left
      figures
-      rectangle 560.1 192 591.9 224 fill 15132390;
-      line 564.9 203.6 586.9 203.6 color 16711680 width 2;
-      line 562.2 214.7 587.9 214.7;
-      line 564.5 198.7 564.5 217;
+      rectangle 568.1 200 599.9 232 fill 15132390;
+      line 572.9 211.6 594.9 211.6 color 16711680 width 2;
+      line 570.2 222.7 595.9 222.7;
+      line 572.5 206.7 572.5 225;
     end;
     implementation eq
 parameters
@@ -1067,7 +1067,7 @@ equations
 	//HJoym = homogeneous(R,p);
 	HJoym = HJoym_setp;
      implementation_end;
-   JointSpaceSetpoint1 576 336
+   JointSpaceSetpoint1 584 280
     description '<Description>
  <Version>4.0</Version>
  <IsMainModel>1</IsMainModel>
@@ -1082,10 +1082,10 @@ equations
     end;
     icon bg left
      figures
-      rectangle 560.1 320 591.9 352 fill 15132390;
-      line 564.9 331.6 586.9 331.6 color 16711680 width 2;
-      line 562.2 342.7 587.9 342.7;
-      line 564.5 326.7 564.5 345;
+      rectangle 568.1 264 599.9 296 fill 15132390;
+      line 572.9 275.6 594.9 275.6 color 16711680 width 2;
+      line 570.2 286.7 595.9 286.7;
+      line 572.5 270.7 572.5 289;
     end;
     implementation eq
 
@@ -2152,6 +2152,7 @@ code
         end;
         connections
          MUX\FL -> Wheel1\vel;
+         Wheel2\rfriction_FR -> DEMUX\FR;
          Wheel3\rfriction_RL -> DEMUX\RL;
          Wheel4\rfriction_RR -> DEMUX\RR;
          DEMUX\force -> fric_force;
@@ -2160,7 +2161,6 @@ code
          MUX\RR -> Wheel4\vel;
          MUX\RL -> Wheel3\vel;
          Wheel1\rfriction_FL -> DEMUX\FL;
-         Wheel2\rfriction_FR -> DEMUX\FR;
         end;
        implementation_end;
       Gain 408 352
@@ -5655,14 +5655,6 @@ implementation_end;
         end;
         connections
          Base\p => ZeroJunction\p;
-         Mux\port8 => Joint34\p1 584 208 768 208;
-         Mux\port9 => Joint45\p1 600 192 928 192;
-         JointBase1\p2 <= Link1\p;
-         Joint12\p => Link1\p1;
-         Joint12\p2 <= Link2\p;
-         Joint23\p => Link2\p1;
-         Joint23\p2 <= Link3\p;
-         Joint34\p => Link3\p1;
          Link4\p => Joint34\p2;
          Joint45\p => Link4\p1;
          Mux\port => EffortSensor\p1;
@@ -5673,15 +5665,15 @@ implementation_end;
          JointBase1\p => Base\p1;
          Wtip0\p => Link5\p1;
          Mux\port7 => Joint23\p1 568 224 608 224;
+         Mux\port8 => Joint34\p1 584 208 768 208;
+         Mux\port9 => Joint45\p1 600 192 928 192;
+         JointBase1\p2 <= Link1\p;
+         Joint12\p => Link1\p1;
+         Joint12\p2 <= Link2\p;
+         Joint23\p => Link2\p1;
+         Joint23\p2 <= Link3\p;
+         Joint34\p => Link3\p1;
          Hfloor0\output -> Base\Hin;
-         Link1\Hin <- JointBase1\Hout;
-         Joint45\Hout -> Link5\Hin;
-         Joint45\Hin <- Link4\Hout;
-         jointPos -> Submodel13\jointPos;
-         Submodel13\port1 -> JointBase1\angle 288 608;
-         Submodel13\port2 -> Joint12\angle 448 592;
-         Submodel13\port3 -> Joint23\angle;
-         Submodel13\port4 -> Joint34\angle 768 600;
          Submodel13\port5 -> Joint45\angle 928 608;
          Joint34\Hout -> Link4\Hin;
          Joint34\Hin <- Link3\Hout;
@@ -5692,6 +5684,14 @@ implementation_end;
          Joint12\Hin <- Link1\Hout;
          Base\Hout -> JointBase1\Hin;
          Htip0\input <- Link5\Hout;
+         Link1\Hin <- JointBase1\Hout;
+         Joint45\Hout -> Link5\Hin;
+         Joint45\Hin <- Link4\Hout;
+         jointPos -> Submodel13\jointPos;
+         Submodel13\port1 -> JointBase1\angle 288 608;
+         Submodel13\port2 -> Joint12\angle 448 592;
+         Submodel13\port3 -> Joint23\angle;
+         Submodel13\port4 -> Joint34\angle 768 600;
         end;
         parameterrelations
 Base\m = Linkm[1];
@@ -6796,14 +6796,6 @@ tip_f=Jacobian*joints_f;
      end;
      connections
       JointSpaceDamping\output -> PlusMinus5\plus;
-      Hvp0 -> CartesianSpaceStiffness\Hvp0;
-      JntSpaceStiffness -> JointSpaceStiffness\jnt_stiffness;
-      PlusMinus5\output -> PlusMinus3\plus;
-      JointSpaceSetpoint -> PlusMinus2\plus 776 296;
-      Splitter16\output -> Arm1_joint_cmd;
-      inH -> Impule_decoder\input;
-      Splitter10\output -> PlusMinus1\plus;
-      Mux\joints_velocities -> Splitter15\input 1432 344;
       CalculateJ\controllableJ -> Splitter7\input;
       Mux\Arm1_joint_cmd -> Splitter16\input;
       PlusMinus6\output -> TF\tip_e;
@@ -6814,6 +6806,7 @@ tip_f=Jacobian*joints_f;
       Splitter17\output -> Base_twist_cmd;
       Arm1_joint_states -> Splitter3\input;
       PO\H -> Splitter28\input;
+      Hvp0 -> CartesianSpaceStiffness\Hvp0;
       Splitter23\output -> TF1\joints_f 648 136 648 352;
       Splitter28\output -> PC\H;
       Splitter28\output -> PC_switch\H;
@@ -6824,6 +6817,7 @@ tip_f=Jacobian*joints_f;
       Splitter15\output -> Deadzone\input 1432 232 728 232;
       Splitter4\output -> PlusMinus2\minus;
       Splitter10\output -> PO\joint_torque;
+      JntSpaceStiffness -> JointSpaceStiffness\jnt_stiffness;
       Splitter15\output -> JointStates;
       HtipCC -> CartesianSpaceStiffness\HtipCC;
       Splitter13\output -> DiscreteDifferential1\input;
@@ -6834,6 +6828,7 @@ tip_f=Jacobian*joints_f;
       Mux\Base_twist -> Base_twist;
       Splitter2\output -> Splitter4\input;
       FilterButterworth\output -> Splitter23\input;
+      PlusMinus5\output -> PlusMinus3\plus;
       Splitter14\output -> CartesianSpaceStiffness\Htip0 304 272;
       PC\joint_torque_cmd -> PC_switch\torque;
       JointSpaceStiffness\output -> Limit1\input;
@@ -6844,6 +6839,7 @@ tip_f=Jacobian*joints_f;
       Mux\Base_torque_cmd -> Splitter18\input;
       Mux\joint_states -> Splitter20\input;
       TF1\tip_f -> Gain\input;
+      JointSpaceSetpoint -> PlusMinus2\plus 776 296;
       Splitter6\output -> Splitter1\input 1416 256;
       Splitter6\output -> DiscreteDifferential\input 1416 136;
       Splitter20\output -> Splitter6\input 1416 360;
@@ -6854,6 +6850,7 @@ tip_f=Jacobian*joints_f;
       PlusMinus7\output -> Base_torque_cmd;
       CartesianSpaceStiffness\effort -> Splitter8\input;
       Splitter28\output -> EnergyTank;
+      Splitter16\output -> Arm1_joint_cmd;
       Splitter8\output -> Wtip0;
       Mux\Base_twist_cmd -> Splitter17\input;
       TF\joints_e -> Limit3\input;
@@ -6864,6 +6861,7 @@ tip_f=Jacobian*joints_f;
       Base_joint_states -> Splitter13\input;
       Splitter3\output -> Mux\Arm1_joint_states;
       DiscreteDifferential\output -> FilterButterworth\input;
+      inH -> Impule_decoder\input;
       PlusMinus3\output -> PlusMinus4\plus;
       Splitter7\output -> TF\Jacobian;
       Splitter2\output -> JointSoftLimits\error;
@@ -6872,6 +6870,8 @@ tip_f=Jacobian*joints_f;
       PC_switch\torque_cmd -> Splitter10\input;
       Limit3\output -> PlusMinus5\plus;
       Splitter22\output -> Splitter2\input;
+      Splitter10\output -> PlusMinus1\plus;
+      Mux\joints_velocities -> Splitter15\input 1432 344;
      end;
      figures
       rectangle 1278.7 264 1409.2 488 fill 15132390;
@@ -10303,14 +10303,6 @@ implementation_end;
         end;
         connections
          Base\p => ZeroJunction\p;
-         Mux\port9 => Joint45\p1 760 224 1088 224;
-         JointBase1\p2 <= Link1\p;
-         Joint12\p => Link1\p1;
-         Joint12\p2 <= Link2\p;
-         Joint23\p => Link2\p1;
-         Joint23\p2 <= Link3\p;
-         Joint34\p => Link3\p1;
-         Link4\p => Joint34\p2;
          Joint45\p => Link4\p1;
          joints <= Mux\port;
          Link5\p => Joint45\p2;
@@ -10320,7 +10312,18 @@ implementation_end;
          Wtip0\p => Link5\p1;
          Mux\port7 => Joint23\p1 728 256 768 256;
          Mux\port8 => Joint34\p1 744 240 928 240;
+         Mux\port9 => Joint45\p1 760 224 1088 224;
+         JointBase1\p2 <= Link1\p;
+         Joint12\p => Link1\p1;
+         Joint12\p2 <= Link2\p;
+         Joint23\p => Link2\p1;
+         Joint23\p2 <= Link3\p;
+         Joint34\p => Link3\p1;
+         Link4\p => Joint34\p2;
          Hfloor0\output -> Base\Hin;
+         Joint12\Hin <- Link1\Hout;
+         Base\Hout -> JointBase1\Hin;
+         Htip0\input <- Link5\Hout;
          Link1\Hin <- JointBase1\Hout;
          Joint45\Hout -> Link5\Hin;
          Joint45\Hin <- Link4\Hout;
@@ -10329,9 +10332,6 @@ implementation_end;
          Link3\Hin <- Joint23\Hout;
          Link2\Hout -> Joint23\Hin;
          Link2\Hin <- Joint12\Hout;
-         Joint12\Hin <- Link1\Hout;
-         Base\Hout -> JointBase1\Hin;
-         Htip0\input <- Link5\Hout;
         end;
         parameterrelations
 Base\m = Linkm[1];
@@ -11057,6 +11057,7 @@ implementation_end;
         end;
         connections
          Submodel1\port1 => R1\p;
+         R3\p <= Submodel1\port3;
          R4\p <= Submodel1\port4;
          R5\p <= Submodel1\port5;
          R6\p <= Submodel1\port6;
@@ -11065,7 +11066,6 @@ implementation_end;
          Submodel1\port9 => R9\p;
          Submodel1\input <= port1;
          Submodel1\port2 => R2\p;
-         R3\p <= Submodel1\port3;
         end;
        implementation_end;
       YouBot_OODL 440 240
@@ -11202,14 +11202,6 @@ implementation_end;
   end;
   connections
    youBot_RTT_test\Base_joint_velocities -> Sample2\input;
-   CartesianSpaceStiffness\output -> YouBot_Control\CartSpaceStiffness;
-   Hold1\output -> youBot_RTT_test\Arm1_joint_cmd;
-   Delay\output -> YouBot_Control\inH 768 456;
-   HapticMaster\outH -> Delay\input;
-   HapticMaster\JointSetpoint -> YouBot_Control\JointSpaceSetpoint 528 304;
-   YouBot_Control\Base_torque_cmd -> Hold3\input;
-   YouBot_Control\Htip0 -> HapticMaster\Hytip0;
-   Sample1\output -> YouBot_Control\Arm1_joint_states;
    HapticMaster\effort -> MockupPhantom\W;
    YouBot_Control\Base_twist_cmd -> Hold2\input;
    youBot_RTT_test\Arm1_joint_velocities -> Sample3\input;
@@ -11220,6 +11212,7 @@ implementation_end;
    youBot_RTT_test\Base_joint_states -> Sample4\input;
    MockupPhantom\Hpos0 -> HapticMaster\Htip0;
    youBot_RTT_test\Arm1_joint_states -> Sample1\input;
+   CartesianSpaceStiffness\output -> YouBot_Control\CartSpaceStiffness;
    HtipCC\output -> YouBot_Control\HtipCC;
    Sample2\output -> YouBot_Control\Base_joint_velocities;
    YouBot_Control\Arm1_joint_cmd -> Hold1\input;
@@ -11229,6 +11222,13 @@ implementation_end;
    Sample3\output -> YouBot_Control\Arm1_joint_velocites;
    JointSpaceSetpoint1\output -> YouBot_Control\JntSpaceStiffness;
    InteractiveMarker\HJoym -> HapticMaster\HJoym;
+   Hold1\output -> youBot_RTT_test\Arm1_joint_cmd;
+   Delay\output -> YouBot_Control\inH 768 456;
+   HapticMaster\outH -> Delay\input;
+   HapticMaster\JointSetpoint -> YouBot_Control\JointSpaceSetpoint 464 264;
+   YouBot_Control\Base_torque_cmd -> Hold3\input;
+   YouBot_Control\Htip0 -> HapticMaster\Hytip0;
+   Sample1\output -> YouBot_Control\Arm1_joint_states;
   end;
  implementation_end;
 ]]>
@@ -11244,7 +11244,7 @@ implementation_end;
 <ExpData>
   <VersionNumber>4.1</VersionNumber>
   <ModelProperties>
-    <ModelProperty section="CCodeDialog" entry="SubmodelName" value="YouBot_control"/>
+    <ModelProperty section="CCodeDialog" entry="SubmodelName" value="YouBot_Control"/>
     <ModelProperty section="CCodeDialog" entry="TargetName" value="Orocos Component"/>
   </ModelProperties>
   <Variables>
@@ -12610,7 +12610,6 @@ implementation_end;
       </Childs>
       <FrontPlane>0.01</FrontPlane>
       <BackPlane>100</BackPlane>
-      <AutoFrontBack>true</AutoFrontBack>
       <Field>0.00392699081698724</Field>
       <Fieldy>45</Fieldy>
       <PlaneLeft>-10</PlaneLeft>
@@ -12661,7 +12660,6 @@ implementation_end;
       </Childs>
       <FrontPlane>0.01</FrontPlane>
       <BackPlane>100</BackPlane>
-      <AutoFrontBack>true</AutoFrontBack>
       <Field>10</Field>
       <Fieldy>45</Fieldy>
       <PlaneLeft>-10</PlaneLeft>
@@ -12712,7 +12710,6 @@ implementation_end;
       </Childs>
       <FrontPlane>0.01</FrontPlane>
       <BackPlane>100</BackPlane>
-      <AutoFrontBack>true</AutoFrontBack>
       <Field>10</Field>
       <Fieldy>45</Fieldy>
       <PlaneLeft>-10</PlaneLeft>
@@ -12763,7 +12760,6 @@ implementation_end;
       </Childs>
       <FrontPlane>0.01</FrontPlane>
       <BackPlane>100</BackPlane>
-      <AutoFrontBack>true</AutoFrontBack>
       <Field>10</Field>
       <Fieldy>45</Fieldy>
       <PlaneLeft>-10</PlaneLeft>
@@ -13478,7 +13474,6 @@ implementation_end;
      </Childs>
      <FrontPlane>0.01</FrontPlane>
      <BackPlane>100</BackPlane>
-     <AutoFrontBack>true</AutoFrontBack>
      <Field>0.00392699081698724</Field>
      <Fieldy>45</Fieldy>
      <PlaneLeft>-10</PlaneLeft>
@@ -13538,7 +13533,6 @@ implementation_end;
      </Childs>
      <FrontPlane>0.01</FrontPlane>
      <BackPlane>100</BackPlane>
-     <AutoFrontBack>true</AutoFrontBack>
      <Field>10</Field>
      <Fieldy>45</Fieldy>
      <PlaneLeft>-10</PlaneLeft>
@@ -13589,7 +13583,6 @@ implementation_end;
      </Childs>
      <FrontPlane>0.01</FrontPlane>
      <BackPlane>100</BackPlane>
-     <AutoFrontBack>true</AutoFrontBack>
      <Field>10</Field>
      <Fieldy>45</Fieldy>
      <PlaneLeft>-10</PlaneLeft>
@@ -14349,7 +14342,7 @@ implementation_end;
       <YAxis>
        <X>
         <VariableName>Plant\Base\Hin[1,2]</VariableName>
-        <Value>0.000382189303447468</Value>
+        <Value>0.000382189303447534</Value>
        </X>
        <Y>
         <VariableName>Plant\Base\Hin[2,2]</VariableName>
@@ -14357,7 +14350,7 @@ implementation_end;
        </Y>
        <Z>
         <VariableName>Plant\Base\Hin[3,2]</VariableName>
-        <Value>1.88479400108324e-006</Value>
+        <Value>1.88479400108328e-006</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -14935,15 +14928,15 @@ implementation_end;
       <YAxis>
        <X>
         <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRR0[1,2]</VariableName>
-        <Value>-0.923399306576533</Value>
+        <Value>-0.923399306576579</Value>
        </X>
        <Y>
         <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRR0[2,2]</VariableName>
-        <Value>-4.85191728160535e-005</Value>
+        <Value>-4.851917281616e-005</Value>
        </Y>
        <Z>
         <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRR0[3,2]</VariableName>
-        <Value>-0.383840745960962</Value>
+        <Value>-0.38384074596085</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -15093,11 +15086,11 @@ implementation_end;
       <YAxis>
        <X>
         <VariableName>YouBot_Control\GravityCompensationModel\Link1\Hin[1,2]</VariableName>
-        <Value>-0.178795485736573</Value>
+        <Value>-0.244478590784517</Value>
        </X>
        <Y>
         <VariableName>YouBot_Control\GravityCompensationModel\Link1\Hin[2,2]</VariableName>
-        <Value>-0.983886260845339</Value>
+        <Value>-0.96965469041717</Value>
        </Y>
        <Z>
         <VariableName>YouBot_Control\GravityCompensationModel\Link1\Hin[3,2]</VariableName>
@@ -15180,44 +15173,44 @@ implementation_end;
      <Position>
       <X>
        <VariableName>YouBot_Control\GravityCompensationModel\Link3\Hin[1,4]</VariableName>
-       <Value>0.0679785423620317</Value>
+       <Value>-0.147796201677308</Value>
       </X>
       <Y>
        <VariableName>YouBot_Control\GravityCompensationModel\Link3\Hin[2,4]</VariableName>
-       <Value>-0.00799194496003023</Value>
+       <Value>0.0433148972549509</Value>
       </Y>
       <Z>
        <VariableName>YouBot_Control\GravityCompensationModel\Link3\Hin[3,4]</VariableName>
-       <Value>0.249118959684234</Value>
+       <Value>0.171914616570691</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>YouBot_Control\GravityCompensationModel\Link3\Hin[1,3]</VariableName>
-        <Value>-0.925684695477678</Value>
+        <Value>-0.954420845321227</Value>
        </X>
        <Y>
         <VariableName>YouBot_Control\GravityCompensationModel\Link3\Hin[2,3]</VariableName>
-        <Value>0.168218879918743</Value>
+        <Value>0.240637688432275</Value>
        </Y>
        <Z>
         <VariableName>YouBot_Control\GravityCompensationModel\Link3\Hin[3,3]</VariableName>
-        <Value>-0.33883661696647</Value>
+        <Value>0.176562603408214</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>YouBot_Control\GravityCompensationModel\Link3\Hin[1,2]</VariableName>
-        <Value>-0.178795485736573</Value>
+        <Value>-0.244478590784517</Value>
        </X>
        <Y>
         <VariableName>YouBot_Control\GravityCompensationModel\Link3\Hin[2,2]</VariableName>
-        <Value>-0.983886260845339</Value>
+        <Value>-0.969654690417169</Value>
        </Y>
        <Z>
         <VariableName>YouBot_Control\GravityCompensationModel\Link3\Hin[3,2]</VariableName>
-        <Value>6.93889390390723e-018</Value>
+        <Value>0</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -15296,11 +15289,11 @@ implementation_end;
      <Position>
       <X>
        <VariableName>YouBot_Control\GravityCompensationModel\Link2\Hin[1,4]</VariableName>
-       <Value>-0.0084682466078962</Value>
+       <Value>-0.00799860478376659</Value>
       </X>
       <Y>
        <VariableName>YouBot_Control\GravityCompensationModel\Link2\Hin[2,4]</VariableName>
-       <Value>0.0059002510293069</Value>
+       <Value>0.00806779349588905</Value>
       </Y>
       <Z>
        <VariableName>YouBot_Control\GravityCompensationModel\Link2\Hin[3,4]</VariableName>
@@ -15311,25 +15304,25 @@ implementation_end;
       <ZAxis>
        <X>
         <VariableName>YouBot_Control\GravityCompensationModel\Link2\Hin[1,3]</VariableName>
-        <Value>0.493205090128567</Value>
+        <Value>-0.901919979958332</Value>
        </X>
        <Y>
         <VariableName>YouBot_Control\GravityCompensationModel\Link2\Hin[2,3]</VariableName>
-        <Value>-0.0896270708989493</Value>
+        <Value>0.227400669413302</Value>
        </Y>
        <Z>
         <VariableName>YouBot_Control\GravityCompensationModel\Link2\Hin[3,3]</VariableName>
-        <Value>0.865283610866025</Value>
+        <Value>0.367191074649622</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>YouBot_Control\GravityCompensationModel\Link2\Hin[1,2]</VariableName>
-        <Value>-0.178795485736573</Value>
+        <Value>-0.244478590784517</Value>
        </X>
        <Y>
         <VariableName>YouBot_Control\GravityCompensationModel\Link2\Hin[2,2]</VariableName>
-        <Value>-0.983886260845339</Value>
+        <Value>-0.96965469041717</Value>
        </Y>
        <Z>
         <VariableName>YouBot_Control\GravityCompensationModel\Link2\Hin[3,2]</VariableName>
@@ -15412,44 +15405,44 @@ implementation_end;
      <Position>
       <X>
        <VariableName>YouBot_Control\GravityCompensationModel\Link4\Hin[1,4]</VariableName>
-       <Value>-0.0569888915274548</Value>
+       <Value>-0.276643015795674</Value>
       </X>
       <Y>
        <VariableName>YouBot_Control\GravityCompensationModel\Link4\Hin[2,4]</VariableName>
-       <Value>0.014717603829</Value>
+       <Value>0.075800985193308</Value>
       </Y>
       <Z>
        <VariableName>YouBot_Control\GravityCompensationModel\Link4\Hin[3,4]</VariableName>
-       <Value>0.20337601639376</Value>
+       <Value>0.1957505680308</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>YouBot_Control\GravityCompensationModel\Link4\Hin[1,3]</VariableName>
-        <Value>-0.23826298155859</Value>
+        <Value>-0.178907656892823</Value>
        </X>
        <Y>
         <VariableName>YouBot_Control\GravityCompensationModel\Link4\Hin[2,3]</VariableName>
-        <Value>0.0432980388243359</Value>
+        <Value>0.045107905185195</Value>
        </Y>
        <Z>
         <VariableName>YouBot_Control\GravityCompensationModel\Link4\Hin[3,3]</VariableName>
-        <Value>0.970235039283151</Value>
+        <Value>0.982831281143882</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>YouBot_Control\GravityCompensationModel\Link4\Hin[1,2]</VariableName>
-        <Value>-0.178795485736573</Value>
+        <Value>-0.244478590784517</Value>
        </X>
        <Y>
         <VariableName>YouBot_Control\GravityCompensationModel\Link4\Hin[2,2]</VariableName>
-        <Value>-0.983886260845339</Value>
+        <Value>-0.96965469041717</Value>
        </Y>
        <Z>
         <VariableName>YouBot_Control\GravityCompensationModel\Link4\Hin[3,2]</VariableName>
-        <Value>0</Value>
+        <Value>6.93889390390723e-018</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -15528,44 +15521,44 @@ implementation_end;
      <Position>
       <X>
        <VariableName>YouBot_Control\GravityCompensationModel\Link5\Hin[1,4]</VariableName>
-       <Value>-0.0798621377570795</Value>
+       <Value>-0.293818150857385</Value>
       </X>
       <Y>
        <VariableName>YouBot_Control\GravityCompensationModel\Link5\Hin[2,4]</VariableName>
-       <Value>0.0188742155561363</Value>
+       <Value>0.0801313440910867</Value>
       </Y>
       <Z>
        <VariableName>YouBot_Control\GravityCompensationModel\Link5\Hin[3,4]</VariableName>
-       <Value>0.296518580164943</Value>
+       <Value>0.290102371020613</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>YouBot_Control\GravityCompensationModel\Link5\Hin[1,3]</VariableName>
-        <Value>-0.23826298155859</Value>
+        <Value>-0.178907656892823</Value>
        </X>
        <Y>
         <VariableName>YouBot_Control\GravityCompensationModel\Link5\Hin[2,3]</VariableName>
-        <Value>0.0432980388243359</Value>
+        <Value>0.045107905185195</Value>
        </Y>
        <Z>
         <VariableName>YouBot_Control\GravityCompensationModel\Link5\Hin[3,3]</VariableName>
-        <Value>0.970235039283151</Value>
+        <Value>0.982831281143882</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>YouBot_Control\GravityCompensationModel\Link5\Hin[1,2]</VariableName>
-        <Value>0.449337250505837</Value>
+        <Value>0.555025832598765</Value>
        </X>
        <Y>
         <VariableName>YouBot_Control\GravityCompensationModel\Link5\Hin[2,2]</VariableName>
-        <Value>0.890568012882968</Value>
+        <Value>0.82944665877808</Value>
        </Y>
        <Z>
         <VariableName>YouBot_Control\GravityCompensationModel\Link5\Hin[3,2]</VariableName>
-        <Value>0.0706020519357376</Value>
+        <Value>0.0629647948454293</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -15676,11 +15669,11 @@ implementation_end;
      <Position>
       <X>
        <VariableName>YouBot_Control\CalculateJ\H10[1,4]</VariableName>
-       <Value>0.165988502036083</Value>
+       <Value>0.148806509513578</Value>
       </X>
       <Y>
        <VariableName>YouBot_Control\CalculateJ\H10[2,4]</VariableName>
-       <Value>0.0127200509305273</Value>
+       <Value>0.0467835252373081</Value>
       </Y>
       <Z>
        <VariableName>YouBot_Control\CalculateJ\H10[3,4]</VariableName>
@@ -15791,11 +15784,11 @@ implementation_end;
      <Position>
       <X>
        <VariableName>YouBot_Control\CalculateJ\H20[1,4]</VariableName>
-       <Value>0.133268345081287</Value>
+       <Value>0.115814235626482</Value>
       </X>
       <Y>
        <VariableName>YouBot_Control\CalculateJ\H20[2,4]</VariableName>
-       <Value>0.0170085621935955</Value>
+       <Value>0.0474975726858703</Value>
       </Y>
       <Z>
        <VariableName>YouBot_Control\CalculateJ\H20[3,4]</VariableName>
@@ -15906,15 +15899,15 @@ implementation_end;
      <Position>
       <X>
        <VariableName>YouBot_Control\CalculateJ\H30[1,4]</VariableName>
-       <Value>0.210308259308683</Value>
+       <Value>-0.028324567819396</Value>
       </X>
       <Y>
        <VariableName>YouBot_Control\CalculateJ\H30[2,4]</VariableName>
-       <Value>0.00691122249175868</Value>
+       <Value>0.0506171498690481</Value>
       </Y>
       <Z>
        <VariableName>YouBot_Control\CalculateJ\H30[3,4]</VariableName>
-       <Value>0.295118959684234</Value>
+       <Value>0.217914616570691</Value>
       </Z>
      </Position>
      <Orientation>
@@ -16021,15 +16014,15 @@ implementation_end;
      <Position>
       <X>
        <VariableName>YouBot_Control\CalculateJ\H40[1,4]</VariableName>
-       <Value>0.0843712445852647</Value>
+       <Value>-0.161172528210142</Value>
       </X>
       <Y>
        <VariableName>YouBot_Control\CalculateJ\H40[2,4]</VariableName>
-       <Value>0.0234173262621258</Value>
+       <Value>0.0534923608195975</Value>
       </Y>
       <Z>
        <VariableName>YouBot_Control\CalculateJ\H40[3,4]</VariableName>
-       <Value>0.24937601639376</Value>
+       <Value>0.2417505680308</Value>
       </Z>
      </Position>
      <Orientation>
@@ -16136,15 +16129,15 @@ implementation_end;
      <Position>
       <X>
        <VariableName>YouBot_Control\CalculateJ\H50[1,4]</VariableName>
-       <Value>0.0613205324314086</Value>
+       <Value>-0.178881011559119</Value>
       </X>
       <Y>
        <VariableName>YouBot_Control\CalculateJ\H50[2,4]</VariableName>
-       <Value>0.0264384987714791</Value>
+       <Value>0.0538756231978293</Value>
       </Y>
       <Z>
        <VariableName>YouBot_Control\CalculateJ\H50[3,4]</VariableName>
-       <Value>0.342518580164943</Value>
+       <Value>0.336102371020613</Value>
       </Z>
      </Position>
      <Orientation>
@@ -16251,44 +16244,44 @@ implementation_end;
      <Position>
       <X>
        <VariableName>YouBot_Control\CalculateJ\Htip0[1,4]</VariableName>
-       <Value>0.0531567385435845</Value>
+       <Value>-0.185152766078549</Value>
       </X>
       <Y>
        <VariableName>YouBot_Control\CalculateJ\Htip0[2,4]</VariableName>
-       <Value>0.0275084973685417</Value>
+       <Value>0.0540113619567864</Value>
       </Y>
       <Z>
        <VariableName>YouBot_Control\CalculateJ\Htip0[3,4]</VariableName>
-       <Value>0.37550657150057</Value>
+       <Value>0.369518634579505</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>YouBot_Control\CalculateJ\Htip0[1,3]</VariableName>
-        <Value>-0.240111584936002</Value>
+        <Value>-0.184463368218517</Value>
        </X>
        <Y>
         <VariableName>YouBot_Control\CalculateJ\Htip0[2,3]</VariableName>
-        <Value>0.0314705469724302</Value>
+        <Value>0.00399231643991467</Value>
        </Y>
        <Z>
         <VariableName>YouBot_Control\CalculateJ\Htip0[3,3]</VariableName>
-        <Value>0.970235039283151</Value>
+        <Value>0.982831281143882</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>YouBot_Control\CalculateJ\Htip0[1,2]</VariableName>
-        <Value>0.404777736951232</Value>
+        <Value>0.355661783647394</Value>
        </X>
        <Y>
         <VariableName>YouBot_Control\CalculateJ\Htip0[2,2]</VariableName>
-        <Value>0.911685435844569</Value>
+        <Value>0.932491356669233</Value>
        </Y>
        <Z>
         <VariableName>YouBot_Control\CalculateJ\Htip0[3,2]</VariableName>
-        <Value>0.0706020519357376</Value>
+        <Value>0.0629647948454294</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -16319,44 +16312,44 @@ implementation_end;
      <Position>
       <X>
        <VariableName>YouBot_Control\CartesianSpaceStiffness\Hvp0[1,4]</VariableName>
-       <Value>0.134279292340546</Value>
+       <Value>-0.224051230713322</Value>
       </X>
       <Y>
        <VariableName>YouBot_Control\CartesianSpaceStiffness\Hvp0[2,4]</VariableName>
-       <Value>0.0636994282953954</Value>
+       <Value>0.0576974264304266</Value>
       </Y>
       <Z>
        <VariableName>YouBot_Control\CartesianSpaceStiffness\Hvp0[3,4]</VariableName>
-       <Value>0.425702978862168</Value>
+       <Value>0.390331204002727</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>YouBot_Control\CartesianSpaceStiffness\Hvp0[1,3]</VariableName>
-        <Value>0.00604852695389004</Value>
+        <Value>-0.145914505648681</Value>
        </X>
        <Y>
         <VariableName>YouBot_Control\CartesianSpaceStiffness\Hvp0[2,3]</VariableName>
-        <Value>-0.0121954713539108</Value>
+        <Value>0.042941411487796</Value>
        </Y>
        <Z>
         <VariableName>YouBot_Control\CartesianSpaceStiffness\Hvp0[3,3]</VariableName>
-        <Value>0.999907338607005</Value>
+        <Value>0.988364807255265</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>YouBot_Control\CartesianSpaceStiffness\Hvp0[1,2]</VariableName>
-        <Value>-0.52455553673761</Value>
+        <Value>0.267243768934813</Value>
        </X>
        <Y>
         <VariableName>YouBot_Control\CartesianSpaceStiffness\Hvp0[2,2]</VariableName>
-        <Value>0.851268308400938</Value>
+        <Value>0.963625936977704</Value>
        </Y>
        <Z>
         <VariableName>YouBot_Control\CartesianSpaceStiffness\Hvp0[3,2]</VariableName>
-        <Value>0.0135556626589504</Value>
+        <Value>-0.00241278870995168</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -16844,11 +16837,11 @@ implementation_end;
       <YAxis>
        <X>
         <VariableName>youBot_RTT_test\GravityImitation\Link1\Hin[1,2]</VariableName>
-        <Value>-0.178739084420503</Value>
+        <Value>-0.244261617017067</Value>
        </X>
        <Y>
         <VariableName>youBot_RTT_test\GravityImitation\Link1\Hin[2,2]</VariableName>
-        <Value>-0.983896508633159</Value>
+        <Value>-0.969709370096117</Value>
        </Y>
        <Z>
         <VariableName>youBot_RTT_test\GravityImitation\Link1\Hin[3,2]</VariableName>
@@ -16931,40 +16924,40 @@ implementation_end;
      <Position>
       <X>
        <VariableName>youBot_RTT_test\GravityImitation\Link3\Hin[1,4]</VariableName>
-       <Value>0.0680320618977626</Value>
+       <Value>-0.14781443908208</Value>
       </X>
       <Y>
        <VariableName>youBot_RTT_test\GravityImitation\Link3\Hin[2,4]</VariableName>
-       <Value>-0.00799906327514714</Value>
+       <Value>0.04327860904645</Value>
       </Y>
       <Z>
        <VariableName>youBot_RTT_test\GravityImitation\Link3\Hin[3,4]</VariableName>
-       <Value>0.249087702104078</Value>
+       <Value>0.171892277511758</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>youBot_RTT_test\GravityImitation\Link3\Hin[1,3]</VariableName>
-        <Value>-0.926106827273282</Value>
+        <Value>-0.954466155504987</Value>
        </X>
        <Y>
         <VariableName>youBot_RTT_test\GravityImitation\Link3\Hin[2,3]</VariableName>
-        <Value>0.168240749845084</Value>
+        <Value>0.240421979740799</Value>
        </Y>
        <Z>
         <VariableName>youBot_RTT_test\GravityImitation\Link3\Hin[3,3]</VariableName>
-        <Value>-0.337670245312465</Value>
+        <Value>0.176611521858129</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>youBot_RTT_test\GravityImitation\Link3\Hin[1,2]</VariableName>
-        <Value>-0.178739084420503</Value>
+        <Value>-0.244261617017067</Value>
        </X>
        <Y>
         <VariableName>youBot_RTT_test\GravityImitation\Link3\Hin[2,2]</VariableName>
-        <Value>-0.983896508633159</Value>
+        <Value>-0.969709370096117</Value>
        </Y>
        <Z>
         <VariableName>youBot_RTT_test\GravityImitation\Link3\Hin[3,2]</VariableName>
@@ -17047,11 +17040,11 @@ implementation_end;
      <Position>
       <X>
        <VariableName>youBot_RTT_test\GravityImitation\Link2\Hin[1,4]</VariableName>
-       <Value>-0.00846858478489426</Value>
+       <Value>-0.00800040921317186</Value>
       </X>
       <Y>
        <VariableName>youBot_RTT_test\GravityImitation\Link2\Hin[2,4]</VariableName>
-       <Value>0.00589838978587659</Value>
+       <Value>0.00806063336156321</Value>
       </Y>
       <Z>
        <VariableName>youBot_RTT_test\GravityImitation\Link2\Hin[3,4]</VariableName>
@@ -17062,29 +17055,29 @@ implementation_end;
       <ZAxis>
        <X>
         <VariableName>youBot_RTT_test\GravityImitation\Link2\Hin[1,3]</VariableName>
-        <Value>0.493552559242948</Value>
+        <Value>-0.902025999154243</Value>
        </X>
        <Y>
         <VariableName>youBot_RTT_test\GravityImitation\Link2\Hin[2,3]</VariableName>
-        <Value>-0.0896609874904756</Value>
+        <Value>0.227212746354108</Value>
        </Y>
        <Z>
         <VariableName>youBot_RTT_test\GravityImitation\Link2\Hin[3,3]</VariableName>
-        <Value>0.865081949058567</Value>
+        <Value>0.367046951688763</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>youBot_RTT_test\GravityImitation\Link2\Hin[1,2]</VariableName>
-        <Value>-0.178739084420503</Value>
+        <Value>-0.244261617017067</Value>
        </X>
        <Y>
         <VariableName>youBot_RTT_test\GravityImitation\Link2\Hin[2,2]</VariableName>
-        <Value>-0.983896508633159</Value>
+        <Value>-0.969709370096117</Value>
        </Y>
        <Z>
         <VariableName>youBot_RTT_test\GravityImitation\Link2\Hin[3,2]</VariableName>
-        <Value>0</Value>
+        <Value>-1.38777878078145e-017</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -17163,44 +17156,44 @@ implementation_end;
      <Position>
       <X>
        <VariableName>youBot_RTT_test\GravityImitation\Link4\Hin[1,4]</VariableName>
-       <Value>-0.0569923597841304</Value>
+       <Value>-0.276667370075253</Value>
       </X>
       <Y>
        <VariableName>youBot_RTT_test\GravityImitation\Link4\Hin[2,4]</VariableName>
-       <Value>0.0147134379539392</Value>
+       <Value>0.0757355763114579</Value>
       </Y>
       <Z>
        <VariableName>youBot_RTT_test\GravityImitation\Link4\Hin[3,4]</VariableName>
-       <Value>0.203502218986895</Value>
+       <Value>0.195734832962606</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>youBot_RTT_test\GravityImitation\Link4\Hin[1,3]</VariableName>
-        <Value>-0.236945841131033</Value>
+        <Value>-0.178856584751636</Value>
        </X>
        <Y>
         <VariableName>youBot_RTT_test\GravityImitation\Link4\Hin[2,3]</VariableName>
-        <Value>0.0430446518809604</Value>
+        <Value>0.0450524661850533</Value>
        </Y>
        <Z>
         <VariableName>youBot_RTT_test\GravityImitation\Link4\Hin[3,3]</VariableName>
-        <Value>0.970568815857564</Value>
+        <Value>0.982843119415111</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>youBot_RTT_test\GravityImitation\Link4\Hin[1,2]</VariableName>
-        <Value>-0.178739084420503</Value>
+        <Value>-0.244261617017067</Value>
        </X>
        <Y>
         <VariableName>youBot_RTT_test\GravityImitation\Link4\Hin[2,2]</VariableName>
-        <Value>-0.983896508633159</Value>
+        <Value>-0.969709370096117</Value>
        </Y>
        <Z>
         <VariableName>youBot_RTT_test\GravityImitation\Link4\Hin[3,2]</VariableName>
-        <Value>1.38777878078145e-017</Value>
+        <Value>6.93889390390723e-018</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -17279,44 +17272,44 @@ implementation_end;
      <Position>
       <X>
        <VariableName>youBot_RTT_test\GravityImitation\Link5\Hin[1,4]</VariableName>
-       <Value>-0.0797391605327095</Value>
+       <Value>-0.29383760221141</Value>
       </X>
       <Y>
        <VariableName>youBot_RTT_test\GravityImitation\Link5\Hin[2,4]</VariableName>
-       <Value>0.0188457245345114</Value>
+       <Value>0.080060613065223</Value>
       </Y>
       <Z>
        <VariableName>youBot_RTT_test\GravityImitation\Link5\Hin[3,4]</VariableName>
-       <Value>0.296676825309221</Value>
+       <Value>0.290087772426456</Value>
       </Z>
      </Position>
      <Orientation>
       <ZAxis>
        <X>
         <VariableName>youBot_RTT_test\GravityImitation\Link5\Hin[1,3]</VariableName>
-        <Value>-0.236945841131033</Value>
+        <Value>-0.178856584751636</Value>
        </X>
        <Y>
         <VariableName>youBot_RTT_test\GravityImitation\Link5\Hin[2,3]</VariableName>
-        <Value>0.0430446518809604</Value>
+        <Value>0.0450524661850533</Value>
        </Y>
        <Z>
         <VariableName>youBot_RTT_test\GravityImitation\Link5\Hin[3,3]</VariableName>
-        <Value>0.970568815857564</Value>
+        <Value>0.982843119415111</Value>
        </Z>
       </ZAxis>
       <YAxis>
        <X>
         <VariableName>youBot_RTT_test\GravityImitation\Link5\Hin[1,2]</VariableName>
-        <Value>0.449279603852583</Value>
+        <Value>0.554924770029747</Value>
        </X>
        <Y>
         <VariableName>youBot_RTT_test\GravityImitation\Link5\Hin[2,2]</VariableName>
-        <Value>0.890630165640138</Value>
+        <Value>0.829514603900182</Value>
        </Y>
        <Z>
         <VariableName>youBot_RTT_test\GravityImitation\Link5\Hin[3,2]</VariableName>
-        <Value>0.0701836563160321</Value>
+        <Value>0.0629604758857257</Value>
        </Z>
       </YAxis>
       <OrientationType>Matrix</OrientationType>
@@ -17341,12 +17334,12 @@ implementation_end;
      </MainFrame>
     </Plot>
    </Plots>
-   <WindowRectangles virtualDesktopWidth="1680" virtualDesktopHeight="1028">
-     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1028">
-0.0541667 0.0466926 0.377381 0.912451
+   <WindowRectangles virtualDesktopWidth="1680" virtualDesktopHeight="1050">
+     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1050">
+0.0541667 0.0495238 0.377381 0.898095
      </WindowRectangle>
-     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1028">
-0.4375 0.0622568 0.989881 0.832685
+     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1050">
+0.4375 0.0590476 0.989881 0.815238
      </WindowRectangle>
    </WindowRectangles>
   </PlotSpecs>
@@ -17360,7 +17353,6 @@ implementation_end;
     <EventEpsilon>1e-006</EventEpsilon>
     <AlgebraicTolerance>1e-007</AlgebraicTolerance>
     <SteadyStateAnalysis>false</SteadyStateAnalysis>
-    <UpdateHoldInstructions>false</UpdateHoldInstructions>
     <DiscreteSystems>
      <DiscreteSystem>
       <DiscreteID>Sample1\output</DiscreteID>
@@ -17503,9 +17495,6 @@ implementation_end;
   </ExportData>
   <BreakPoints>
   </BreakPoints>
-  <AnimationPlayback>
-   <PlaybackSpeed>1</PlaybackSpeed>
-  </AnimationPlayback>
 </ExpData>
   </Experiment>
 </Experiments>
