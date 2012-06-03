@@ -7,7 +7,7 @@
 <IsMainModel>0</IsMainModel>
  <KeepParameterValues>False</KeepParameterValues>
    <LibraryPath>Z:\Users\yury\workspaces\20SimModels\Automatica\Energy_bank_two_components_exchange.emx</LibraryPath>
-  <TimeStamp>2012-5-7 10:47:14</TimeStamp>
+  <TimeStamp>2012-6-3 17:37:14</TimeStamp>
 </Description>';
  type Mainmodel
  end;
@@ -32,7 +32,7 @@
     implementation eq
 parameters
 	real initial = 0.0;
-	integer n = 20;
+	integer n = 700;
 variables
 	integer hidden i;
 	real hidden x[n+1];
@@ -41,13 +41,14 @@ variables
 initialequations
 	x = initial;
 	xn = 0;
-	k=5;
-code
-if time==8 then
 	k=n;
+code
+if time==3 then
+	//xn=x[k];	
+	k=5;
 end;
 	xn[1] = input;
-	for i = 2 to k do
+	for i = 2 to n do
 		xn[i] = x[i-1];
 	end;
 	x = previous (xn);
@@ -68,17 +69,32 @@ implementation_end;
     end;
     implementation eq
 parameters
-	real beta=0.1;
+	real beta = 0.001;
+	real roundUp=100;
 variables
 	real H;
 	real dist;
+	real outSum;
+	real inSum;
+	real inD;
 initialequations
-	H=10;
-equations
-	output =H*beta;
-	dist=sample(sin(10*time));
-	next(H,10)=H+input-H*beta+dist;
-	implementation_end;
+	H=15;
+	outSum=0;
+	inSum=0;
+	dist=0.0;
+code
+	outSum=(outSum+H*beta) mod roundUp;
+	output = outSum;
+if (input+0.1*roundUp)<inSum then
+	inD=roundUp+input-inSum;
+else
+	inD=input-inSum;
+end;
+	if input==0 then
+		inD=0;
+	end;
+	inSum=(inSum+inD) mod roundUp;
+	H=H+inD-H*beta+dist;implementation_end;
    Submodel2 488 168
     description '<Description>
  <Version>4.0</Version>
@@ -94,20 +110,38 @@ equations
     end;
     implementation eq
 parameters
-	real beta=0.1;
+	real beta = 0.001;
+	real roundUp=100;
 variables
 	real H;
+	real dist;
+	real outSum;
+	real inSum;
+	real inD;
 initialequations
 	H=10;
-equations
-	output =H*beta;
-	next(H,100)=H+input-H*beta;
-	implementation_end;
+	outSum=0;
+	inSum=0;
+	dist=0;
+code
+	outSum=(outSum+H*beta) mod roundUp;
+	output = outSum;
+if (input+0.1*roundUp)<inSum then
+	inD=roundUp+input-inSum;
+else
+	inD=input-inSum;
+end;
+	if input==0 then
+		inD=0;
+	end;
+	inSum=(inSum+inD) mod roundUp;
+	
+	H=H+inD-H*beta+dist;implementation_end;
   end;
   connections
-   Delay_n\output -> Submodel2\input;
-   Submodel2\output -> Submodel1\input 440 224;
-   Submodel1\output -> Delay_n\input;
+   Delay_n\output -> Submodel2\input 488 104;
+   Submodel2\output -> Submodel1\input 488 216 296 216;
+   Submodel1\output -> Delay_n\input 296 104;
   end;
  implementation_end;
 ]]>
@@ -129,10 +163,16 @@ equations
    </Parameters>
    <Initials>
     <Variable>
+     <Name>Submodel2\input_initial</Name>
+     <VarType>B</VarType>
+     <DiscreteIndex>-1</DiscreteIndex>
+     <Value>0</Value>
+    </Variable>
+    <Variable>
      <Name>Delay_n\x_initial</Name>
-     <Rows>21</Rows>
+     <Rows>701</Rows>
      <Columns>1</Columns>
-     <Value>0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</Value>
+     <Value>0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</Value>
     </Variable>
    </Initials>
   </Variables>
@@ -141,6 +181,10 @@ equations
     <VarName>time</VarName>
     <VarName>Submodel1\H</VarName>
     <VarName>Submodel2\H</VarName>
+    <VarName>Submodel2\inD</VarName>
+    <VarName>Submodel2\input</VarName>
+    <VarName>Submodel2\dist</VarName>
+    <VarName>Delay_n\output</VarName>
    </VarNames>
    <Plots>
     <Plot>
@@ -208,8 +252,8 @@ equations
      </XAxes>
      <YAxes>
       <Axis>
-       <Minimum>0</Minimum>
-       <Maximum>100</Maximum>
+       <Minimum>-60</Minimum>
+       <Maximum>140</Maximum>
        <Linear>true</Linear>
        <Scaling>1</Scaling>
        <Label>H1</Label>
@@ -220,6 +264,34 @@ equations
        <Linear>true</Linear>
        <Scaling>1</Scaling>
        <Label>H2</Label>
+      </Axis>
+      <Axis>
+       <Minimum>0</Minimum>
+       <Maximum>10</Maximum>
+       <Linear>true</Linear>
+       <Scaling>1</Scaling>
+       <Label>Submodel2\inD</Label>
+      </Axis>
+      <Axis>
+       <Minimum>0</Minimum>
+       <Maximum>10</Maximum>
+       <Linear>true</Linear>
+       <Scaling>1</Scaling>
+       <Label>Submodel2\inD</Label>
+      </Axis>
+      <Axis>
+       <Minimum>0</Minimum>
+       <Maximum>10</Maximum>
+       <Linear>true</Linear>
+       <Scaling>1</Scaling>
+       <Label>Submodel2\dist</Label>
+      </Axis>
+      <Axis>
+       <Minimum>0</Minimum>
+       <Maximum>10</Maximum>
+       <Linear>true</Linear>
+       <Scaling>1</Scaling>
+       <Label>Delay_n\output</Label>
       </Axis>
      </YAxes>
      <ZAxes>
@@ -261,6 +333,78 @@ equations
         <VarName>Submodel2\H</VarName>
        </YCurveData>
       </Curve>
+      <Curve>
+       <LineColor>255</LineColor>
+       <LineStyle>1</LineStyle>
+       <TickColor>255</TickColor>
+       <TickStyle>0</TickStyle>
+       <PixelThresshold>1</PixelThresshold>
+       <LineThickness>1</LineThickness>
+       <LineOrder>1</LineOrder>
+       <ShowYValues>true</ShowYValues>
+       <XCurveData>
+        <ShowUnit>true</ShowUnit>
+        <VarName>time</VarName>
+       </XCurveData>
+       <YCurveData>
+        <ShowUnit>true</ShowUnit>
+        <VarName>Submodel2\input</VarName>
+       </YCurveData>
+      </Curve>
+      <Curve>
+       <LineColor>65280</LineColor>
+       <LineStyle>1</LineStyle>
+       <TickColor>65280</TickColor>
+       <TickStyle>0</TickStyle>
+       <PixelThresshold>1</PixelThresshold>
+       <LineThickness>1</LineThickness>
+       <LineOrder>1</LineOrder>
+       <ShowYValues>true</ShowYValues>
+       <XCurveData>
+        <ShowUnit>true</ShowUnit>
+        <VarName>time</VarName>
+       </XCurveData>
+       <YCurveData>
+        <ShowUnit>true</ShowUnit>
+        <VarName>Submodel2\inD</VarName>
+       </YCurveData>
+      </Curve>
+      <Curve>
+       <LineColor>0</LineColor>
+       <LineStyle>1</LineStyle>
+       <TickColor>0</TickColor>
+       <TickStyle>0</TickStyle>
+       <PixelThresshold>1</PixelThresshold>
+       <LineThickness>1</LineThickness>
+       <LineOrder>1</LineOrder>
+       <ShowYValues>true</ShowYValues>
+       <XCurveData>
+        <ShowUnit>true</ShowUnit>
+        <VarName>time</VarName>
+       </XCurveData>
+       <YCurveData>
+        <ShowUnit>true</ShowUnit>
+        <VarName>Submodel2\dist</VarName>
+       </YCurveData>
+      </Curve>
+      <Curve>
+       <LineColor>10040319</LineColor>
+       <LineStyle>1</LineStyle>
+       <TickColor>10040319</TickColor>
+       <TickStyle>0</TickStyle>
+       <PixelThresshold>1</PixelThresshold>
+       <LineThickness>1</LineThickness>
+       <LineOrder>1</LineOrder>
+       <ShowYValues>true</ShowYValues>
+       <XCurveData>
+        <ShowUnit>true</ShowUnit>
+        <VarName>time</VarName>
+       </XCurveData>
+       <YCurveData>
+        <ShowUnit>true</ShowUnit>
+        <VarName>Delay_n\output</VarName>
+       </YCurveData>
+      </Curve>
      </Curves>
      <Legenda>
       <ShowLegenda>true</ShowLegenda>
@@ -272,7 +416,7 @@ equations
    </Plots>
    <WindowRectangles virtualDesktopWidth="1680" virtualDesktopHeight="1028">
      <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1028">
-0.469643 0.0710117 0.975 0.781128
+0.653571 0.0466926 1 0.75
      </WindowRectangle>
    </WindowRectangles>
   </PlotSpecs>
@@ -289,8 +433,8 @@ equations
     <UpdateHoldInstructions>true</UpdateHoldInstructions>
     <DiscreteSystems>
      <DiscreteSystem>
-      <DiscreteID>Submodel1\dist</DiscreteID>
-      <TimeInterval>0.1</TimeInterval>
+      <DiscreteID>Delay_n\x</DiscreteID>
+      <TimeInterval>0.001</TimeInterval>
       <InitialSampleTimeDelay>0</InitialSampleTimeDelay>
       <FixedSampleTimeDelay>0</FixedSampleTimeDelay>
       <VariableTimeDelayMin>0</VariableTimeDelayMin>
@@ -376,8 +520,8 @@ equations
      <InitialStepSize>0</InitialStepSize>
      <UseMaximumStepSize>false</UseMaximumStepSize>
      <MaximumStepSize>0</MaximumStepSize>
-     <UseFixedStepSize>true</UseFixedStepSize>
-     <FixedStepSize>0.02</FixedStepSize>
+     <UseFixedStepSize>false</UseFixedStepSize>
+     <FixedStepSize>0</FixedStepSize>
     </IntegrationMethod>
     <IntegrationMethod>
      <Name>MeBDFiMethod</Name>
