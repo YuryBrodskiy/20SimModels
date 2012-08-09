@@ -6,8 +6,8 @@
    <Version>4.1</Version>
 <IsMainModel>0</IsMainModel>
  <KeepParameterValues>False</KeepParameterValues>
-   <LibraryPath>Z:\home\youbot\DEV\20SimModels\Devel\motion_stack.emx</LibraryPath>
-  <TimeStamp>2012-8-7 16:54:56</TimeStamp>
+   <LibraryPath>Z:\Users\yury\workspaces\20SimModels\Devel\motion_stack.emx</LibraryPath>
+  <TimeStamp>2012-8-9 11:24:53</TimeStamp>
 </Description>';
  type 'Mainmodel-ea9'
  end;
@@ -3563,14 +3563,6 @@ implementation_end;
         end;
         connections
          Base\p => ZeroJunction\p;
-         JointBase1\p2 <= Link1\p;
-         Joint12\p => Link1\p1;
-         Joint12\p2 <= Link2\p;
-         Joint23\p => Link2\p1;
-         Joint23\p2 <= Link3\p;
-         Joint34\p => Link3\p1;
-         Link4\p => Joint34\p2;
-         Joint45\p => Link4\p1;
          Mux\port => EffortSensor1\p1;
          Link5\p => Joint45\p2;
          JointBase1\p1 <= Mux\port5 288 272 536 272;
@@ -3581,15 +3573,15 @@ implementation_end;
          Mux\port7 => Joint23\p1 568 224 608 224;
          Mux\port8 => Joint34\p1 584 208 768 208;
          Mux\port9 => Joint45\p1 600 192 928 192;
+         JointBase1\p2 <= Link1\p;
+         Joint12\p => Link1\p1;
+         Joint12\p2 <= Link2\p;
+         Joint23\p => Link2\p1;
+         Joint23\p2 <= Link3\p;
+         Joint34\p => Link3\p1;
+         Link4\p => Joint34\p2;
+         Joint45\p => Link4\p1;
          Hfloor0\output -> Base\Hin;
-         Joint45\Hin <- Link4\Hout;
-         jointPos -> Submodel13\jointPos;
-         Submodel13\port1 -> JointBase1\angle 288 608;
-         Submodel13\port2 -> Joint12\angle 448 592;
-         Submodel13\port3 -> Joint23\angle;
-         Submodel13\port4 -> Joint34\angle 768 600;
-         Submodel13\port5 -> Joint45\angle 928 608;
-         Joint34\Hout -> Link4\Hin;
          Joint34\Hin <- Link3\Hout;
          Link3\Hin <- Joint23\Hout;
          Link2\Hout -> Joint23\Hin;
@@ -3600,6 +3592,14 @@ implementation_end;
          Htip0\input <- Link5\Hout;
          Link1\Hin <- JointBase1\Hout;
          Joint45\Hout -> Link5\Hin;
+         Joint45\Hin <- Link4\Hout;
+         jointPos -> Submodel13\jointPos;
+         Submodel13\port1 -> JointBase1\angle 288 608;
+         Submodel13\port2 -> Joint12\angle 448 592;
+         Submodel13\port3 -> Joint23\angle;
+         Submodel13\port4 -> Joint34\angle 768 600;
+         Submodel13\port5 -> Joint45\angle 928 608;
+         Joint34\Hout -> Link4\Hin;
         end;
         parameterrelations
 Base\m = Linkm[1];
@@ -3986,6 +3986,13 @@ equations
         end;
         connections
          Demux\port1 -> PD_Joint1\error;
+         angles_setpoint -> PlusMinus1\plus;
+         Submodel3\cmd -> torque_cmd;
+         active_joint -> Submodel3\active;
+         angles_measured -> PlusMinus1\minus;
+         Demux\port2 -> PD_Joint2\error;
+         Demux\port3 -> PD_Joint3\error;
+         Demux\port4 -> PD_Joint4\error;
          Demux\port5 -> PD_Joint5\error;
          PD_Joint1\output -> Demux1\port1;
          PD_Joint2\output -> Demux1\port2;
@@ -3994,13 +4001,6 @@ equations
          PD_Joint5\output -> Demux1\port5;
          Demux1\output -> Submodel3\input;
          PlusMinus1\output -> Demux\input;
-         angles_setpoint -> PlusMinus1\plus;
-         Submodel3\cmd -> torque_cmd;
-         active_joint -> Submodel3\active;
-         angles_measured -> PlusMinus1\minus;
-         Demux\port2 -> PD_Joint2\error;
-         Demux\port3 -> PD_Joint3\error;
-         Demux\port4 -> PD_Joint4\error;
         end;
        implementation_end;
       plug angles_setpoint 519.9 176;
@@ -4138,14 +4138,6 @@ implementation_end;
      end;
      connections
       Splitter2\output -> GravityCompensationModel\jointPos;
-      Splitter2\output -> Splitter4\input;
-      GravityCompensationModel\joints -> PlusMinus1\plus;
-      Splitter4\output -> JointSoftLimits\error;
-      PlusMinus2\plus <- PlusMinus3\output;
-      joints_torque -> PlusMinus3\plus;
-      angles_setpoint -> JointSpaceController\angles_setpoint;
-      active_joint -> JointSpaceController\active_joint;
-      joints_angle -> JointInitialStateOffset\input;
       Splitter4\output -> Splitter6\input 712 240;
       Splitter6\output -> joints_angle_output;
       PlusMinus1\output -> Arm_torque;
@@ -4154,6 +4146,14 @@ implementation_end;
       Splitter6\output -> JointSpaceController\angles_measured;
       JointSoftLimits\output -> PlusMinus2\plus;
       PlusMinus2\output -> PlusMinus1\plus;
+      Splitter2\output -> Splitter4\input;
+      GravityCompensationModel\joints -> PlusMinus1\plus;
+      Splitter4\output -> JointSoftLimits\error;
+      PlusMinus2\plus <- PlusMinus3\output;
+      joints_torque -> PlusMinus3\plus;
+      angles_setpoint -> JointSpaceController\angles_setpoint;
+      active_joint -> JointSpaceController\active_joint;
+      joints_angle -> JointInitialStateOffset\input;
      end;
      figures
       rectangle 616 80 1016 288 fill 15658671;
@@ -4424,6 +4424,8 @@ equations
         end;
         connections
          dHToErrors\angle_error -> PD_BaseAngle\error;
+         dHToErrors\x_error -> PD_BaseX\error;
+         dHToErrors\y_error -> PD_BaseY\error;
          PD_BaseY\output -> ErrorsToW\force_y;
          PD_BaseAngle\output -> ErrorsToW\torque_z;
          PD_BaseX\output -> ErrorsToW\force_x;
@@ -4432,8 +4434,6 @@ equations
          Submodel3\cmd -> W_base_base0;
          ErrorsToW\W_base_base0 -> Submodel3\input;
          active_joint -> Submodel3\active;
-         dHToErrors\x_error -> PD_BaseX\error;
-         dHToErrors\y_error -> PD_BaseY\error;
         end;
        implementation_end;
       BaseTF 816 448
@@ -4667,6 +4667,12 @@ implementation_end;
      end;
      connections
       Splitter7\output -> BasePositionController\H_base_0;
+      Splitter5\output -> Splitter7\input;
+      PlusMinus4\output -> BaseTF\W_base_base0;
+      H_base_0 -> Splitter5\input;
+      W_base_00 -> PlusMinus4\plus;
+      H_vp_0 -> BasePositionController\H_vp_0;
+      active_joint -> BasePositionController\active_joint;
       Splitter7\output -> H_base_0_output;
       BaseTF\Twist -> T_base_00;
       BaseTF\Base_torque -> Base_torque;
@@ -4675,12 +4681,6 @@ implementation_end;
       DiscreteDifferential\output -> BaseTF\Base_joint_velocity;
       BasePositionController\W_base_base0 -> PlusMinus4\plus;
       Splitter5\output -> BaseTF\H_base_0;
-      Splitter5\output -> Splitter7\input;
-      PlusMinus4\output -> BaseTF\W_base_base0;
-      H_base_0 -> Splitter5\input;
-      W_base_00 -> PlusMinus4\plus;
-      H_vp_0 -> BasePositionController\H_vp_0;
-      active_joint -> BasePositionController\active_joint;
      end;
      figures
       rectangle 616 424 1016 632 fill 15658671;
@@ -4947,6 +4947,11 @@ implementation_end;
      end;
      connections
       Damping\output -> PlusMinus5\minus;
+      Htip0 -> CartesianSpaceStiffness\Htip0;
+      StiffnessCC -> CartesianSpaceStiffness\cart_stiffness;
+      HtipCC -> CartesianSpaceStiffness\HtipCC;
+      PlusMinus5\output -> W_tooltip_00;
+      Splitter1\output -> CartesianSpaceStiffness\Hvp0;
       Splitter1\output -> Delay\input;
       Delay\output -> dHToErrors1\H_base_0;
       Splitter1\output -> dHToErrors1\H_vp_0;
@@ -4955,11 +4960,6 @@ implementation_end;
       CartesianSpaceStiffness\effort -> PlusMinus5\plus;
       T_tooltip_00 -> PlusMinus2\plus;
       Hvp0 -> Splitter1\input;
-      Htip0 -> CartesianSpaceStiffness\Htip0;
-      StiffnessCC -> CartesianSpaceStiffness\cart_stiffness;
-      HtipCC -> CartesianSpaceStiffness\HtipCC;
-      PlusMinus5\output -> W_tooltip_00;
-      Splitter1\output -> CartesianSpaceStiffness\Hvp0;
      end;
     implementation_end;
    CartesianStiffnessSetpoint 261 314
@@ -5126,12 +5126,18 @@ variables
 	real H[4,4];
 	real dotH[4,4];
 	real aldo[4,4]; //20sim bug
+	boolean update;
+	real Hamcl[4,4];
+	real H_base_baseprev[4,4];
 initialequations
 	H_base_0=eye(4);
 	H=eye(4);
 	aldo=eye(4);
+ 	H_base_baseprev=eye(4);
+	Hamcl=eye(4);
+	update=false;
 code
-	omega=T[1:3]*sampletime;	
+	omega=T[1:3]*sampletime;	//input velocity from any where
 	v=T[4:6]*sampletime;
   omega_norm=norm(omega);
 if (omega_norm==0) then
@@ -5144,8 +5150,14 @@ else
 	H[4,4]=1;
 	H[4,1:3]=0;
 end;
-  	H_base_0=aldo*H;
-	aldo=H_base_0;	
+  	H_base_baseprev=aldo*H; // output to amcl at any point in time
+	aldo=H_base_baseprev;	
+	H_base_0=Hamcl*H_base_baseprev; //output to controller
+	if update then
+		H_base_baseprev=eye(4);
+		Hamcl=eye(4); //input  from amcl
+	end;
+
 /*
 	dotH=H*tilde(T);
 	H=H + dotH*sampletime;
@@ -5181,7 +5193,7 @@ variables
 	real rot_norm;
 	real angle;
 equations
-	output[1:3] =0;// [sign((sin(time/1.5)));sign((cos(time/1.5)));0];//position ;
+	output[1:3] = [sign((sin(time/1.5)));sign((cos(time/1.5)));0];//position ;
 	angle=0;//pi/2*((time));
   	qw = cos(angle/2.0);
    rot_norm= sqrt(vector[1]^2+vector[2]^2+vector[3]^2);
@@ -5821,6 +5833,11 @@ equations
      end;
      connections
       H_base_0 -> HToAngles\H_vp_0;
+      Splitter1\output -> CalculateJ\jointVelocities;
+      Splitter1\output -> DiscreteDifferential\input;
+      TF\tip_f -> T_tooltip_00 328 272;
+      CalculateJ\controllableJ -> TF\Jacobian;
+      DiscreteDifferential\output -> TF\joints_f;
       W_tooltip_00 -> TF\tip_e;
       CalculateJ\Htip0 -> H_tooltip_0;
       CmdDemux\arm_torque -> torques_cmd;
@@ -5829,11 +5846,6 @@ equations
       HToAngles\pose -> StateMux\base_pose;
       angles_measured -> StateMux\arm_angles;
       StateMux\measured_angles -> Splitter1\input;
-      Splitter1\output -> CalculateJ\jointVelocities;
-      Splitter1\output -> DiscreteDifferential\input;
-      TF\tip_f -> T_tooltip_00 328 272;
-      CalculateJ\controllableJ -> TF\Jacobian;
-      DiscreteDifferential\output -> TF\joints_f;
      end;
     implementation_end;
    YouBotModel 1176 328
@@ -6335,6 +6347,8 @@ implementation_end;
            end;
            connections
             AdHik\p2 => Ta0k\p;
+            Gravity\p => Ta00\p;
+            Ta0i\p => AdHik\p1;
             p <= Ta0i\p;
             Ta0i\p <= AdHij\p1;
             Ta0k\p => EJS\p1;
@@ -6343,8 +6357,6 @@ implementation_end;
             Ta0k\p => InertialTensor\p;
             Ta0i\p <= AdHik1\p1;
             AdHi0\p2 => AdHik1\p2;
-            Gravity\p => Ta00\p;
-            Ta0i\p => AdHik\p1;
             Hin -> Splitter1\input;
             Hij\output -> Hout;
             Splitter1\output -> Hij\input;
@@ -7536,6 +7548,8 @@ implementation_end;
            end;
            connections
             p1 => ZeroJunction\p;
+            uTbai\p2 => Tbai\p;
+            Tbai\p => Wbai\p;
             p <= Wbai\p;
             ZeroJunction\p => OneJunction\p;
             OneJunction\p => uTbai\p1;
@@ -7544,8 +7558,6 @@ implementation_end;
             p2 => AdHji\p2;
             OneJunction\p <= EndstopMax\p2;
             OneJunction\p => Rjoint\p;
-            uTbai\p2 => Tbai\p;
-            Tbai\p => Wbai\p;
             EndstopMin\collision -> Or\input2;
             Hin -> MatrixMul\input2;
             Integrate\output -> Splitter2\input;
@@ -8693,6 +8705,8 @@ implementation_end;
            end;
            connections
             p1 => ZeroJunction\p;
+            OneJunction\p <= EndstopMax\p2;
+            OneJunction\p => Rjoint\p;
             uTbai\p2 => Tbai\p;
             Tbai\p => Wbai\p;
             p <= Wbai\p;
@@ -8701,8 +8715,6 @@ implementation_end;
             Wbai\p <= AdHji\p1;
             OneJunction\p <= EndstopMin\p2;
             p2 => AdHji\p2;
-            OneJunction\p <= EndstopMax\p2;
-            OneJunction\p => Rjoint\p;
             EndstopMin\collision -> Or\input2;
             MatrixMul\output -> Hout;
             Hin -> MatrixMul\input2;
@@ -9850,6 +9862,8 @@ implementation_end;
            end;
            connections
             p1 => ZeroJunction\p;
+            p <= Wbai\p;
+            ZeroJunction\p => OneJunction\p;
             OneJunction\p => uTbai\p1;
             Wbai\p <= AdHji\p1;
             OneJunction\p <= EndstopMin\p2;
@@ -9858,8 +9872,6 @@ implementation_end;
             OneJunction\p => Rjoint\p;
             uTbai\p2 => Tbai\p;
             Tbai\p => Wbai\p;
-            p <= Wbai\p;
-            ZeroJunction\p => OneJunction\p;
             EndstopMin\collision -> Or\input2;
             Integrate\output -> Splitter2\input;
             Splitter2\output -> MatrixMul\input1;
@@ -10986,6 +10998,7 @@ implementation_end;
            end;
            connections
             uTbai\p1 <= OneJunction\p;
+            OneJunction\p <= EndstopMin\p2;
             Wbai\p <= AdHji\p1;
             p2 => AdHji\p2;
             OneJunction\p <= EndstopMax\p2;
@@ -10994,7 +11007,6 @@ implementation_end;
             p1 => ZeroJunction\p;
             uTbai\p2 => Wbai\p;
             p <= Wbai\p;
-            OneJunction\p <= EndstopMin\p2;
             OneJunction\flow -> Integrate\input 288 336;
             Integrate\output -> Splitter2\input;
             Splitter2\output -> MatrixMul\input1;
@@ -12123,6 +12135,7 @@ implementation_end;
            end;
            connections
             uTbai\p1 <= OneJunction\p;
+            uTbai\p2 => Wbai\p;
             p <= Wbai\p;
             OneJunction\p <= EndstopMin\p2;
             Wbai\p <= AdHji\p1;
@@ -12131,7 +12144,6 @@ implementation_end;
             Rjoint\p <= OneJunction\p;
             ZeroJunction\p => OneJunction\p;
             p1 => ZeroJunction\p;
-            uTbai\p2 => Wbai\p;
             OneJunction\flow -> Integrate\input 288 336;
             MatrixMul\output -> Hout;
             Hin -> MatrixMul\input2;
@@ -12587,6 +12599,8 @@ implementation_end;
            end;
            connections
             AdHik\p2 => Ta0k\p;
+            Gravity\p => Ta00\p;
+            Ta0i\p => AdHik\p1;
             p <= Ta0i\p;
             Ta0i\p <= AdHij\p1;
             Ta0k\p => EJS\p1;
@@ -12595,8 +12609,6 @@ implementation_end;
             Ta0k\p => InertialTensor\p;
             Ta0i\p <= AdHik1\p1;
             AdHi0\p2 => AdHik1\p2;
-            Gravity\p => Ta00\p;
-            Ta0i\p => AdHik\p1;
             Hin -> Splitter1\input;
             Hij\output -> Hout;
             Splitter1\output -> Hij\input;
@@ -13045,6 +13057,8 @@ implementation_end;
            end;
            connections
             AdHik\p2 => Ta0k\p;
+            Gravity\p => Ta00\p;
+            Ta0i\p => AdHik\p1;
             p <= Ta0i\p;
             Ta0i\p <= AdHij\p1;
             Ta0k\p => EJS\p1;
@@ -13053,8 +13067,6 @@ implementation_end;
             Ta0k\p => InertialTensor\p;
             Ta0i\p <= AdHik1\p1;
             AdHi0\p2 => AdHik1\p2;
-            Gravity\p => Ta00\p;
-            Ta0i\p => AdHik\p1;
             Hin -> Splitter1\input;
             Hij\output -> Hout;
             Splitter1\output -> Hij\input;
@@ -13503,6 +13515,8 @@ implementation_end;
            end;
            connections
             AdHik\p2 => Ta0k\p;
+            Ta0i\p <= AdHik1\p1;
+            AdHi0\p2 => AdHik1\p2;
             Gravity\p => Ta00\p;
             Ta0i\p => AdHik\p1;
             p <= Ta0i\p;
@@ -13511,8 +13525,6 @@ implementation_end;
             p1 => AdHij\p2;
             Ta00\p => AdHi0\p1;
             Ta0k\p => InertialTensor\p;
-            Ta0i\p <= AdHik1\p1;
-            AdHi0\p2 => AdHik1\p2;
             Hin -> Splitter1\input;
             Hij\output -> Hout;
             Splitter1\output -> Hij\input;
@@ -13961,6 +13973,8 @@ implementation_end;
            end;
            connections
             AdHik\p2 => Ta0k\p;
+            Gravity\p => Ta00\p;
+            Ta0i\p => AdHik\p1;
             p <= Ta0i\p;
             Ta0i\p <= AdHij\p1;
             Ta0k\p => EJS\p1;
@@ -13969,8 +13983,6 @@ implementation_end;
             Ta0k\p => InertialTensor\p;
             Ta0i\p <= AdHik1\p1;
             AdHi0\p2 => AdHik1\p2;
-            Gravity\p => Ta00\p;
-            Ta0i\p => AdHik\p1;
             Hin -> Splitter1\input;
             Hij\output -> Hout;
             Splitter1\output -> Hij\input;
@@ -14419,6 +14431,8 @@ implementation_end;
            end;
            connections
             AdHik\p2 => Ta0k\p;
+            p <= Ta0i\p;
+            Ta0i\p <= AdHij\p1;
             Ta0k\p => EJS\p1;
             p1 => AdHij\p2;
             Ta00\p => AdHi0\p1;
@@ -14427,8 +14441,6 @@ implementation_end;
             AdHi0\p2 => AdHik1\p2;
             Gravity\p => Ta00\p;
             Ta0i\p => AdHik\p1;
-            p <= Ta0i\p;
-            Ta0i\p <= AdHij\p1;
             Hin -> Splitter1\input;
             Hij\output -> Hout;
             Splitter1\output -> Hij\input;
@@ -15934,14 +15946,6 @@ implementation_end;
            end;
            connections
             WheelLF\p2 => TF_LF\p1;
-            MotorRF => OneJunction5\p;
-            RwheelRR\p <= OneJunction2\p;
-            RwheelRF\p <= OneJunction5\p;
-            TF_LR\p2 => OneJunction\p;
-            OneJunction2\p => WheelRR\p;
-            RwheelLR\p <= OneJunction3\p;
-            OneJunction4\p => WheelLF\p;
-            RwheelLF\p <= OneJunction4\p;
             OneJunction5\p => WheelRF\p;
             WheelRF\p2 => TF_RF\p1;
             ZeroJunction\p => OneJunction\p;
@@ -15952,13 +15956,22 @@ implementation_end;
             TF_RR\p2 => OneJunction\p;
             OneJunction3\p => WheelLR\p;
             OneJunction\p => Rfloor\p;
+            MotorRF => OneJunction5\p;
             WheelLR\p2 => TF_LR\p1;
             p => ZeroJunction\p;
             p1 => ZeroJunction\p;
             MotorRR => OneJunction2\p;
             MotorLR => OneJunction3\p;
             MotorLF => OneJunction4\p;
+            RwheelRR\p <= OneJunction2\p;
+            RwheelRF\p <= OneJunction5\p;
+            TF_LR\p2 => OneJunction\p;
+            OneJunction2\p => WheelRR\p;
+            RwheelLR\p <= OneJunction3\p;
+            OneJunction4\p => WheelLF\p;
+            RwheelLF\p <= OneJunction4\p;
             OneJunction\flow -> Integrate2\input;
+            Splitter1\output -> Hout;
             Splitter1\output -> MecanumWheelAnimation\Hbase0;
             OneJunction4\flow -> MecanumWheelAnimation\vWheelLF;
             OneJunction5\flow -> MecanumWheelAnimation\vWheelRF;
@@ -15967,7 +15980,6 @@ implementation_end;
             Integrate2\output -> MatrixMul\input1;
             Hin -> MatrixMul\input2;
             MatrixMul\output -> Splitter1\input;
-            Splitter1\output -> Hout;
            end;
            parameterrelations
 WheelLF\WheelRadius = WheelRadius;
@@ -16120,14 +16132,6 @@ implementation_end;
         end;
         connections
          MecanumWheels\MotorLF <= Mux\port1 256 240 632 240;
-         Tfloor0\p => MecanumWheels\p1;
-         MecanumWheels\MotorRR <= Mux\port4 304 288 680 288;
-         Mux\port9 => Joint45\p1 760 224 1088 224;
-         JointBase1\p1 <= Mux\port5 448 304 696 304;
-         MecanumWheels\MotorRF <= Mux\port2 272 256 648 256;
-         Joint23\p => Link2\p1;
-         Joint12\p1 <= Mux\port6 608 320 712 320;
-         Link4\p => Joint34\p2;
          Link1\p => JointBase1\p2;
          Mux\port8 => Joint34\p1 744 240 928 240;
          JointBase1\p => Base\p1;
@@ -16138,11 +16142,23 @@ implementation_end;
          Link2\p => Joint12\p2;
          Link3\p1 <= Joint34\p;
          Joint45\p => Link4\p1;
+         Tfloor0\p => MecanumWheels\p1;
          Link5\p => Joint45\p2;
          Link5\p1 <= Wtip0\p;
          MecanumWheels\MotorLR <= Mux\port3 288 272 664 272;
          Mux\port <= joints;
+         MecanumWheels\MotorRR <= Mux\port4 304 288 680 288;
+         Mux\port9 => Joint45\p1 760 224 1088 224;
+         JointBase1\p1 <= Mux\port5 448 304 696 304;
+         MecanumWheels\MotorRF <= Mux\port2 272 256 648 256;
+         Joint23\p => Link2\p1;
+         Joint12\p1 <= Mux\port6 608 320 712 320;
+         Link4\p => Joint34\p2;
          MecanumWheels\Hout -> Base\Hin;
+         Link4\Hin <- Joint34\Hout;
+         Joint45\Hin <- Link4\Hout;
+         Joint12\Hout -> Link2\Hin;
+         Joint23\Hin <- Link2\Hout;
          Hfloor0\output -> MecanumWheels\Hin;
          Base\Hout -> JointBase1\Hin;
          JointBase1\Hout -> Link1\Hin;
@@ -16151,10 +16167,6 @@ implementation_end;
          Joint34\Hin <- Link3\Hout;
          Link5\Hin <- Joint45\Hout;
          Link5\Hout -> Htip0\input;
-         Link4\Hin <- Joint34\Hout;
-         Joint45\Hin <- Link4\Hout;
-         Joint12\Hout -> Link2\Hin;
-         Joint23\Hin <- Link2\Hout;
         end;
         parameterrelations
 MecanumWheels\WheelRadius = MecanumWheelRadius;
@@ -16378,14 +16390,6 @@ implementation_end;
   end;
   connections
    Constant\output -> YouBotModel\Base_twist_cmd;
-   YouBotKinematics\T_tooltip_00 -> CartesianController\T_tooltip_00;
-   CartesianController\W_tooltip_00 -> YouBotKinematics\W_tooltip_00;
-   HoldBaseWheelsTorque\output -> YouBotModel\Base_joint_cmd;
-   YouBotKinematics\H_tooltip_0 -> CartesianController\Htip0;
-   YouBotModel\Arm1_joint_states -> SampleArmJonitsAngle\input;
-   SampleBaseWheelsAngle\output -> BasePoseController\Base_wheels_angle;
-   PoseBase\output -> PoseToHBase\pose;
-   HoldArmJointsTorque\output -> YouBotModel\Arm1_joint_cmd;
    BasePoseController\T_base_00 -> Odometry\T;
    HtipCC\output -> CartesianController\HtipCC;
    BasePoseController\H_base_0_output -> YouBotKinematics\H_base_0;
@@ -16396,6 +16400,7 @@ implementation_end;
    YouBotKinematics\W_base_00 -> BasePoseController\W_base_00;
    ArmPoseController\Arm_torque -> HoldArmJointsTorque\input;
    ArmPoseController\joints_angle_output -> YouBotKinematics\angles_measured;
+   YouBotKinematics\T_tooltip_00 -> CartesianController\T_tooltip_00;
    ArmJointActive\output -> ArmPoseController\active_joint 872 128;
    BasePoseController\Base_torque -> HoldBaseWheelsTorque\input;
    BaseJointActive\output -> BasePoseController\active_joint 816 512;
@@ -16404,6 +16409,13 @@ implementation_end;
    CartesianStiffnessSetpoint\output -> CartesianController\StiffnessCC;
    PoseTip\output -> PoseToHTip\pose;
    PoseToHTip\H_pose_0 -> CartesianController\Hvp0;
+   CartesianController\W_tooltip_00 -> YouBotKinematics\W_tooltip_00;
+   HoldBaseWheelsTorque\output -> YouBotModel\Base_joint_cmd;
+   YouBotKinematics\H_tooltip_0 -> CartesianController\Htip0;
+   YouBotModel\Arm1_joint_states -> SampleArmJonitsAngle\input;
+   SampleBaseWheelsAngle\output -> BasePoseController\Base_wheels_angle;
+   PoseBase\output -> PoseToHBase\pose;
+   HoldArmJointsTorque\output -> YouBotModel\Arm1_joint_cmd;
   end;
   figures
    rectangle 132 56 320 616 fill 13959039;
@@ -17053,7 +17065,7 @@ Potential field ' 408 80 18 bold;
      <XAxes>
       <Axis>
        <Minimum>0</Minimum>
-       <Maximum>7.4756</Maximum>
+       <Maximum>0.886700000000001</Maximum>
        <Linear>true</Linear>
        <Scaling>3</Scaling>
        <Label>time</Label>
@@ -17061,8 +17073,8 @@ Potential field ' 408 80 18 bold;
      </XAxes>
      <YAxes>
       <Axis>
-       <Minimum>-0.025</Minimum>
-       <Maximum>0.025</Maximum>
+       <Minimum>-0.4</Minimum>
+       <Maximum>1.6</Maximum>
        <Linear>true</Linear>
        <Scaling>1</Scaling>
        <Label>theta</Label>
@@ -17843,6 +17855,7 @@ Potential field ' 408 80 18 bold;
       </Childs>
       <FrontPlane>0.01</FrontPlane>
       <BackPlane>100</BackPlane>
+      <AutoFrontBack>true</AutoFrontBack>
       <Field>0.00392699081698724</Field>
       <Fieldy>45</Fieldy>
       <PlaneLeft>-10</PlaneLeft>
@@ -18037,6 +18050,7 @@ Potential field ' 408 80 18 bold;
      </Childs>
      <FrontPlane>0.01</FrontPlane>
      <BackPlane>100</BackPlane>
+     <AutoFrontBack>true</AutoFrontBack>
      <Field>0.00392699081698724</Field>
      <Fieldy>45</Fieldy>
      <PlaneLeft>-10</PlaneLeft>
@@ -18047,11 +18061,11 @@ Potential field ' 408 80 18 bold;
      <LookatPosition>
       <X>
        <VariableName>YouBotKinematics\HToAngles\pose[2]</VariableName>
-       <Value>0.0180908699306083</Value>
+       <Value>0.797081651807713</Value>
       </X>
       <Y>
        <VariableName>YouBotKinematics\HToAngles\pose[3]</VariableName>
-       <Value>0.00375826898351069</Value>
+       <Value>0.814604518307089</Value>
       </Y>
      </LookatPosition>
      <UseAlwaysLookUp>true</UseAlwaysLookUp>
@@ -18101,6 +18115,7 @@ Potential field ' 408 80 18 bold;
      </Childs>
      <FrontPlane>0.01</FrontPlane>
      <BackPlane>100</BackPlane>
+     <AutoFrontBack>true</AutoFrontBack>
      <Field>0.00392699081698724</Field>
      <Fieldy>45</Fieldy>
      <PlaneLeft>-10</PlaneLeft>
@@ -18111,11 +18126,11 @@ Potential field ' 408 80 18 bold;
      <LookatPosition>
       <X>
        <VariableName>YouBotKinematics\HToAngles\pose[2]</VariableName>
-       <Value>0.0180908699306083</Value>
+       <Value>0.797081651807713</Value>
       </X>
       <Y>
        <VariableName>YouBotKinematics\HToAngles\pose[3]</VariableName>
-       <Value>0.00375826898351069</Value>
+       <Value>0.814604518307089</Value>
       </Y>
      </LookatPosition>
      <UseAlwaysLookUp>true</UseAlwaysLookUp>
@@ -18134,15 +18149,15 @@ Potential field ' 408 80 18 bold;
      <Position>
       <X>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\CameraPose[1]</VariableName>
-       <Value>1.01242711484339</Value>
+       <Value>2.33516571159515</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\CameraPose[2]</VariableName>
-       <Value>1.00938758917489</Value>
+       <Value>2.84770780211141</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\CameraPose[3]</VariableName>
-       <Value>0.999747681291818</Value>
+       <Value>0.999749173174569</Value>
       </Z>
      </Position>
      <Orientation>
@@ -18180,6 +18195,7 @@ Potential field ' 408 80 18 bold;
      </Childs>
      <FrontPlane>0.01</FrontPlane>
      <BackPlane>100</BackPlane>
+     <AutoFrontBack>true</AutoFrontBack>
      <Field>0.00392699081698724</Field>
      <Fieldy>45</Fieldy>
      <PlaneLeft>-10</PlaneLeft>
@@ -18190,11 +18206,11 @@ Potential field ' 408 80 18 bold;
      <LookatPosition>
       <X>
        <VariableName>YouBotKinematics\HToAngles\pose[2]</VariableName>
-       <Value>0.0180908699306083</Value>
+       <Value>0.797081651807713</Value>
       </X>
       <Y>
        <VariableName>YouBotKinematics\HToAngles\pose[3]</VariableName>
-       <Value>0.00375826898351069</Value>
+       <Value>0.814604518307089</Value>
       </Y>
      </LookatPosition>
      <UseAlwaysLookUp>true</UseAlwaysLookUp>
@@ -18358,11 +18374,11 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>YouBotKinematics\CalculateJ\H20[1,4]</VariableName>
-      <Value>0.213338216844886</Value>
+      <Value>0.940234066624678</Value>
      </X>
      <Y>
       <VariableName>YouBotKinematics\CalculateJ\H20[2,4]</VariableName>
-      <Value>-0.0123582229837813</Value>
+      <Value>0.855334218793068</Value>
      </Y>
      <Z>
       <VariableName>YouBotKinematics\CalculateJ\H20[3,4]</VariableName>
@@ -18373,29 +18389,29 @@ Potential field ' 408 80 18 bold;
      <ZAxis>
       <X>
        <VariableName>YouBotKinematics\CalculateJ\H20[1,3]</VariableName>
-       <Value>0.662589137046427</Value>
+       <Value>-0.00878511162870478</Value>
       </X>
       <Y>
        <VariableName>YouBotKinematics\CalculateJ\H20[2,3]</VariableName>
-       <Value>-0.400060813404095</Value>
+       <Value>0.00905738068475685</Value>
       </Y>
       <Z>
        <VariableName>YouBotKinematics\CalculateJ\H20[3,3]</VariableName>
-       <Value>0.633187950806492</Value>
+       <Value>0.999920389665499</Value>
       </Z>
      </ZAxis>
      <YAxis>
       <X>
        <VariableName>YouBotKinematics\CalculateJ\H20[1,2]</VariableName>
-       <Value>0.516875721930132</Value>
+       <Value>-0.717813369981903</Value>
       </X>
       <Y>
        <VariableName>YouBotKinematics\CalculateJ\H20[2,2]</VariableName>
-       <Value>0.856060446510178</Value>
+       <Value>-0.696235567803903</Value>
       </Y>
       <Z>
        <VariableName>YouBotKinematics\CalculateJ\H20[3,2]</VariableName>
-       <Value>-2.77555756156289e-017</Value>
+       <Value>-8.67361737988404e-019</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -18474,44 +18490,44 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>YouBotKinematics\CalculateJ\H30[1,4]</VariableName>
-      <Value>0.316039533087082</Value>
+      <Value>0.938872374322228</Value>
      </X>
      <Y>
       <VariableName>YouBotKinematics\CalculateJ\H30[2,4]</VariableName>
-      <Value>-0.0743676490614161</Value>
+      <Value>0.856738112799206</Value>
      </Y>
      <Z>
       <VariableName>YouBotKinematics\CalculateJ\H30[3,4]</VariableName>
-      <Value>0.259144132375006</Value>
+      <Value>0.315987660398152</Value>
      </Z>
          </Position>
          <Orientation>
      <ZAxis>
       <X>
        <VariableName>YouBotKinematics\CalculateJ\H30[1,3]</VariableName>
-       <Value>0.850954072180186</Value>
+       <Value>-0.695785438200684</Value>
       </X>
       <Y>
        <VariableName>YouBotKinematics\CalculateJ\H30[2,3]</VariableName>
-       <Value>-0.513792574088154</Value>
+       <Value>0.717349289917114</Value>
       </Y>
       <Z>
        <VariableName>YouBotKinematics\CalculateJ\H30[3,3]</VariableName>
-       <Value>0.109061257336546</Value>
+       <Value>-0.0359530282910202</Value>
       </Z>
      </ZAxis>
      <YAxis>
       <X>
        <VariableName>YouBotKinematics\CalculateJ\H30[1,2]</VariableName>
-       <Value>0.516875721930132</Value>
+       <Value>-0.717813369981903</Value>
       </X>
       <Y>
        <VariableName>YouBotKinematics\CalculateJ\H30[2,2]</VariableName>
-       <Value>0.856060446510178</Value>
+       <Value>-0.696235567803903</Value>
       </Y>
       <Z>
        <VariableName>YouBotKinematics\CalculateJ\H30[3,2]</VariableName>
-       <Value>-6.93889390390722e-018</Value>
+       <Value>0</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -18596,11 +18612,11 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>YouBotKinematics\CalculateJ\H10[1,4]</VariableName>
-      <Value>0.18508822211005</Value>
+      <Value>0.963209840362206</Value>
      </X>
      <Y>
       <VariableName>YouBotKinematics\CalculateJ\H10[2,4]</VariableName>
-      <Value>0.004698675839913</Value>
+      <Value>0.831646377583666</Value>
      </Y>
      <Z>
       <VariableName>YouBotKinematics\CalculateJ\H10[3,4]</VariableName>
@@ -18625,15 +18641,15 @@ Potential field ' 408 80 18 bold;
      <YAxis>
       <X>
        <VariableName>YouBotKinematics\CalculateJ\H10[1,2]</VariableName>
-       <Value>0.516875721930132</Value>
+       <Value>-0.717813369981903</Value>
       </X>
       <Y>
        <VariableName>YouBotKinematics\CalculateJ\H10[2,2]</VariableName>
-       <Value>0.856060446510178</Value>
+       <Value>-0.696235567803903</Value>
       </Y>
       <Z>
        <VariableName>YouBotKinematics\CalculateJ\H10[3,2]</VariableName>
-       <Value>-0</Value>
+       <Value>0</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -18712,44 +18728,44 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>YouBotKinematics\CalculateJ\H40[1,4]</VariableName>
-      <Value>0.430918332831407</Value>
+      <Value>0.844941340165136</Value>
      </X>
      <Y>
       <VariableName>YouBotKinematics\CalculateJ\H40[2,4]</VariableName>
-      <Value>-0.143729646563317</Value>
+      <Value>0.953580266938016</Value>
      </Y>
      <Z>
       <VariableName>YouBotKinematics\CalculateJ\H40[3,4]</VariableName>
-      <Value>0.27386740211544</Value>
+      <Value>0.311134001578865</Value>
      </Z>
          </Position>
          <Orientation>
      <ZAxis>
       <X>
        <VariableName>YouBotKinematics\CalculateJ\H40[1,3]</VariableName>
-       <Value>0.840216423429553</Value>
+       <Value>0.105072871772276</Value>
       </X>
       <Y>
        <VariableName>YouBotKinematics\CalculateJ\H40[2,3]</VariableName>
-       <Value>-0.507309352053494</Value>
+       <Value>-0.108329300696941</Value>
       </Y>
       <Z>
        <VariableName>YouBotKinematics\CalculateJ\H40[3,3]</VariableName>
-       <Value>-0.191503480695039</Value>
+       <Value>0.988546637356093</Value>
       </Z>
      </ZAxis>
      <YAxis>
       <X>
        <VariableName>YouBotKinematics\CalculateJ\H40[1,2]</VariableName>
-       <Value>0.516875721930132</Value>
+       <Value>-0.717813369981903</Value>
       </X>
       <Y>
        <VariableName>YouBotKinematics\CalculateJ\H40[2,2]</VariableName>
-       <Value>0.856060446510178</Value>
+       <Value>-0.696235567803903</Value>
       </Y>
       <Z>
        <VariableName>YouBotKinematics\CalculateJ\H40[3,2]</VariableName>
-       <Value>1.38777878078145e-017</Value>
+       <Value>0</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -18828,44 +18844,44 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>YouBotKinematics\CalculateJ\H50[1,4]</VariableName>
-      <Value>0.511579109480644</Value>
+      <Value>0.855028335855274</Value>
      </X>
      <Y>
       <VariableName>YouBotKinematics\CalculateJ\H50[2,4]</VariableName>
-      <Value>-0.192431344360452</Value>
+      <Value>0.94318065407111</Value>
      </Y>
      <Z>
       <VariableName>YouBotKinematics\CalculateJ\H50[3,4]</VariableName>
-      <Value>0.255483067968716</Value>
+      <Value>0.406034478765049</Value>
      </Z>
          </Position>
          <Orientation>
      <ZAxis>
       <X>
        <VariableName>YouBotKinematics\CalculateJ\H50[1,3]</VariableName>
-       <Value>0.840216423429553</Value>
+       <Value>0.105072871772276</Value>
       </X>
       <Y>
        <VariableName>YouBotKinematics\CalculateJ\H50[2,3]</VariableName>
-       <Value>-0.507309352053494</Value>
+       <Value>-0.108329300696941</Value>
       </Y>
       <Z>
        <VariableName>YouBotKinematics\CalculateJ\H50[3,3]</VariableName>
-       <Value>-0.191503480695039</Value>
+       <Value>0.988546637356093</Value>
       </Z>
      </ZAxis>
      <YAxis>
       <X>
        <VariableName>YouBotKinematics\CalculateJ\H50[1,2]</VariableName>
-       <Value>0.539188355186054</Value>
+       <Value>0.0317516097329305</Value>
       </X>
       <Y>
        <VariableName>YouBotKinematics\CalculateJ\H50[2,2]</VariableName>
-       <Value>0.819117512959434</Value>
+       <Value>-0.993176919505674</Value>
       </Y>
       <Z>
        <VariableName>YouBotKinematics\CalculateJ\H50[3,2]</VariableName>
-       <Value>0.195761123808862</Value>
+       <Value>-0.112211594055997</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -18944,11 +18960,11 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>Odometry\H_base_0[1,4]</VariableName>
-      <Value>0.0180908699306083</Value>
+      <Value>0.797081651807713</Value>
      </X>
      <Y>
       <VariableName>Odometry\H_base_0[2,4]</VariableName>
-      <Value>0.00375826898351069</Value>
+      <Value>0.814604518307089</Value>
      </Y>
      <Z>
       <VariableName>Odometry\H_base_0[3,4]</VariableName>
@@ -18973,11 +18989,11 @@ Potential field ' 408 80 18 bold;
      <YAxis>
       <X>
        <VariableName>Odometry\H_base_0[1,2]</VariableName>
-       <Value>-0.00563117878085222</Value>
+       <Value>-0.102047061536389</Value>
       </X>
       <Y>
        <VariableName>Odometry\H_base_0[2,2]</VariableName>
-       <Value>0.999984144787075</Value>
+       <Value>0.994779572182596</Value>
       </Y>
       <Z>
        <VariableName>Odometry\H_base_0[3,2]</VariableName>
@@ -19437,15 +19453,15 @@ Potential field ' 408 80 18 bold;
      <YAxis>
       <X>
        <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRR0[1,2]</VariableName>
-       <Value>-0.923399306583591</Value>
+       <Value>-0.923399306583608</Value>
       </X>
       <Y>
        <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRR0[2,2]</VariableName>
-       <Value>-4.85191728322391e-005</Value>
+       <Value>-4.85191728322795e-005</Value>
       </Y>
       <Z>
        <VariableName>Plant\MecanumWheels\MecanumWheelAnimation\HRR0[3,2]</VariableName>
-       <Value>-0.383840745943983</Value>
+       <Value>-0.383840745943941</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -19476,44 +19492,44 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>YouBotKinematics\CalculateJ\H50[1,4]</VariableName>
-      <Value>0.511579109480644</Value>
+      <Value>0.855028335855274</Value>
      </X>
      <Y>
       <VariableName>YouBotKinematics\CalculateJ\H50[2,4]</VariableName>
-      <Value>-0.192431344360452</Value>
+      <Value>0.94318065407111</Value>
      </Y>
      <Z>
       <VariableName>YouBotKinematics\CalculateJ\H50[3,4]</VariableName>
-      <Value>0.255483067968716</Value>
+      <Value>0.406034478765049</Value>
      </Z>
          </Position>
          <Orientation>
      <ZAxis>
       <X>
        <VariableName>YouBotKinematics\CalculateJ\H50[1,3]</VariableName>
-       <Value>0.840216423429553</Value>
+       <Value>0.105072871772276</Value>
       </X>
       <Y>
        <VariableName>YouBotKinematics\CalculateJ\H50[2,3]</VariableName>
-       <Value>-0.507309352053494</Value>
+       <Value>-0.108329300696941</Value>
       </Y>
       <Z>
        <VariableName>YouBotKinematics\CalculateJ\H50[3,3]</VariableName>
-       <Value>-0.191503480695039</Value>
+       <Value>0.988546637356093</Value>
       </Z>
      </ZAxis>
      <YAxis>
       <X>
        <VariableName>YouBotKinematics\CalculateJ\H50[1,2]</VariableName>
-       <Value>0.539188355186054</Value>
+       <Value>0.0317516097329305</Value>
       </X>
       <Y>
        <VariableName>YouBotKinematics\CalculateJ\H50[2,2]</VariableName>
-       <Value>0.819117512959434</Value>
+       <Value>-0.993176919505674</Value>
       </Y>
       <Z>
        <VariableName>YouBotKinematics\CalculateJ\H50[3,2]</VariableName>
-       <Value>0.195761123808862</Value>
+       <Value>-0.112211594055997</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -19691,15 +19707,15 @@ Potential field ' 408 80 18 bold;
        <Position>
         <X>
          <VariableName>CartesianController\CartesianSpaceStiffness\Hvp0[1,4]</VariableName>
-         <Value>0.607777878696772</Value>
+         <Value>0.291058768012963</Value>
         </X>
         <Y>
          <VariableName>CartesianController\CartesianSpaceStiffness\Hvp0[2,4]</VariableName>
-         <Value>-0.794107077267828</Value>
+         <Value>0.95670517588376</Value>
         </Y>
         <Z>
          <VariableName>CartesianController\CartesianSpaceStiffness\Hvp0[3,4]</VariableName>
-         <Value>0.454215958526378</Value>
+         <Value>0.429091314928093</Value>
         </Z>
        </Position>
        <Orientation>
@@ -20070,44 +20086,44 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>YouBotModel\Plant\Link2\Hin[1,4]</VariableName>
-      <Value>0.213332562396726</Value>
+      <Value>1.6983170239598</Value>
      </X>
      <Y>
       <VariableName>YouBotModel\Plant\Link2\Hin[2,4]</VariableName>
-      <Value>-0.0123617289150689</Value>
+      <Value>1.72010141587625</Value>
      </Y>
      <Z>
       <VariableName>YouBotModel\Plant\Link2\Hin[3,4]</VariableName>
-      <Value>0.160742797687815</Value>
+      <Value>0.1607373146934</Value>
      </Z>
          </Position>
          <Orientation>
      <ZAxis>
       <X>
        <VariableName>YouBotModel\Plant\Link2\Hin[1,3]</VariableName>
-       <Value>0.662250572141313</Value>
+       <Value>-0.0101719275484345</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\Link2\Hin[2,3]</VariableName>
-       <Value>-0.400131872503883</Value>
+       <Value>0.00853494084432496</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\Link2\Hin[3,3]</VariableName>
-       <Value>0.633497169926623</Value>
+       <Value>0.999911839451226</Value>
       </Z>
      </ZAxis>
      <YAxis>
       <X>
        <VariableName>YouBotModel\Plant\Link2\Hin[1,2]</VariableName>
-       <Value>0.517135016206839</Value>
+       <Value>-0.643417134870487</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\Link2\Hin[2,2]</VariableName>
-       <Value>0.855903835140115</Value>
+       <Value>-0.765515767591021</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\Link2\Hin[3,2]</VariableName>
-       <Value>2.27922183670959e-006</Value>
+       <Value>-1.11616715555802e-005</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -20186,44 +20202,44 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>YouBotModel\Plant\Link3\Hin[1,4]</VariableName>
-      <Value>0.315981401078631</Value>
+      <Value>1.69674037518979</Value>
      </X>
      <Y>
       <VariableName>YouBotModel\Plant\Link3\Hin[2,4]</VariableName>
-      <Value>-0.0743821691531714</Value>
+      <Value>1.72142433170712</Value>
      </Y>
      <Z>
       <VariableName>YouBotModel\Plant\Link3\Hin[3,4]</VariableName>
-      <Value>0.258934859026443</Value>
+      <Value>0.31572364980834</Value>
      </Z>
          </Position>
          <Orientation>
      <ZAxis>
       <X>
        <VariableName>YouBotModel\Plant\Link3\Hin[1,3]</VariableName>
-       <Value>0.85074751070847</Value>
+       <Value>-0.765015130919354</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\Link3\Hin[2,3]</VariableName>
-       <Value>-0.514019869381415</Value>
+       <Value>0.642996876104763</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\Link3\Hin[3,3]</VariableName>
-       <Value>0.109600396461211</Value>
+       <Value>-0.0361506124976979</Value>
       </Z>
      </ZAxis>
      <YAxis>
       <X>
        <VariableName>YouBotModel\Plant\Link3\Hin[1,2]</VariableName>
-       <Value>0.517135016206843</Value>
+       <Value>-0.643417134870489</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\Link3\Hin[2,2]</VariableName>
-       <Value>0.855903835140113</Value>
+       <Value>-0.76551576759102</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\Link3\Hin[3,2]</VariableName>
-       <Value>2.27922183203277e-006</Value>
+       <Value>-1.11616715556852e-005</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -20308,44 +20324,44 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>YouBotModel\Plant\Link1\Hin[1,4]</VariableName>
-      <Value>0.18508796191671</Value>
+      <Value>1.72357932434963</Value>
      </X>
      <Y>
       <VariableName>YouBotModel\Plant\Link1\Hin[2,4]</VariableName>
-      <Value>0.00470364061999675</Value>
+      <Value>1.6988686920617</Value>
      </Y>
      <Z>
       <VariableName>YouBotModel\Plant\Link1\Hin[3,4]</VariableName>
-      <Value>0.141742384367155</Value>
+      <Value>0.141737640527019</Value>
      </Z>
          </Position>
          <Orientation>
      <ZAxis>
       <X>
        <VariableName>YouBotModel\Plant\Link1\Hin[1,3]</VariableName>
-       <Value>-1.18987883159186e-005</Value>
+       <Value>-1.47400700736341e-005</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\Link1\Hin[2,3]</VariableName>
-       <Value>4.52627748472748e-006</Value>
+       <Value>-2.19153931352855e-006</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\Link1\Hin[3,3]</VariableName>
-       <Value>0.999999999918966</Value>
+       <Value>0.999999999888964</Value>
       </Z>
      </ZAxis>
      <YAxis>
       <X>
        <VariableName>YouBotModel\Plant\Link1\Hin[1,2]</VariableName>
-       <Value>0.517135016206833</Value>
+       <Value>-0.643417134870487</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\Link1\Hin[2,2]</VariableName>
-       <Value>0.855903835140119</Value>
+       <Value>-0.765515767591022</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\Link1\Hin[3,2]</VariableName>
-       <Value>2.2792218306923e-006</Value>
+       <Value>-1.11616715556089e-005</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -20424,44 +20440,44 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>YouBotModel\Plant\Link4\Hin[1,4]</VariableName>
-      <Value>0.430832315024274</Value>
+      <Value>1.59346333251568</Value>
      </X>
      <Y>
       <VariableName>YouBotModel\Plant\Link4\Hin[2,4]</VariableName>
-      <Value>-0.143774851519662</Value>
+      <Value>1.80822890998127</Value>
      </Y>
      <Z>
       <VariableName>YouBotModel\Plant\Link4\Hin[3,4]</VariableName>
-      <Value>0.273730912548706</Value>
+      <Value>0.310843317121151</Value>
      </Z>
          </Position>
          <Orientation>
      <ZAxis>
       <X>
        <VariableName>YouBotModel\Plant\Link4\Hin[1,3]</VariableName>
-       <Value>0.840107734574425</Value>
+       <Value>0.115229274927956</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\Link4\Hin[2,3]</VariableName>
-       <Value>-0.507590541402897</Value>
+       <Value>-0.0968647904440102</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\Link4\Hin[3,3]</VariableName>
-       <Value>-0.191235029705702</Value>
+       <Value>0.988604787856004</Value>
       </Z>
      </ZAxis>
      <YAxis>
       <X>
        <VariableName>YouBotModel\Plant\Link4\Hin[1,2]</VariableName>
-       <Value>0.517135016206843</Value>
+       <Value>-0.643417134870487</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\Link4\Hin[2,2]</VariableName>
-       <Value>0.855903835140113</Value>
+       <Value>-0.765515767591021</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\Link4\Hin[3,2]</VariableName>
-       <Value>2.27922182838292e-006</Value>
+       <Value>-1.11616715559315e-005</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -20540,44 +20556,44 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>YouBotModel\Plant\Link5\Hin[1,4]</VariableName>
-      <Value>0.511482657543419</Value>
+      <Value>1.60452534290876</Value>
      </X>
      <Y>
       <VariableName>YouBotModel\Plant\Link5\Hin[2,4]</VariableName>
-      <Value>-0.19250354349434</Value>
+      <Value>1.79892989009864</Value>
      </Y>
      <Z>
       <VariableName>YouBotModel\Plant\Link5\Hin[3,4]</VariableName>
-      <Value>0.255372349696959</Value>
+      <Value>0.405749376755327</Value>
      </Z>
          </Position>
          <Orientation>
      <ZAxis>
       <X>
        <VariableName>YouBotModel\Plant\Link5\Hin[1,3]</VariableName>
-       <Value>0.840107734574425</Value>
+       <Value>0.115229274927956</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\Link5\Hin[2,3]</VariableName>
-       <Value>-0.507590541402897</Value>
+       <Value>-0.0968647904440102</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\Link5\Hin[3,3]</VariableName>
-       <Value>-0.191235029705702</Value>
+       <Value>0.988604787856004</Value>
       </Z>
      </ZAxis>
      <YAxis>
       <X>
        <VariableName>YouBotModel\Plant\Link5\Hin[1,2]</VariableName>
-       <Value>0.539316615492766</Value>
+       <Value>0.131217913568949</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\Link5\Hin[2,2]</VariableName>
-       <Value>0.819323649256546</Value>
+       <Value>-0.985028250745203</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\Link5\Hin[3,2]</VariableName>
-       <Value>0.194541373549083</Value>
+       <Value>-0.111808784952064</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -20656,44 +20672,44 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>YouBotModel\Plant\Base\Hin[1,4]</VariableName>
-      <Value>0.0180923052320175</Value>
+      <Value>1.56008983172867</Value>
      </X>
      <Y>
       <VariableName>YouBotModel\Plant\Base\Hin[2,4]</VariableName>
-      <Value>0.00376155186965675</Value>
+      <Value>1.66481755108043</Value>
      </Y>
      <Z>
       <VariableName>YouBotModel\Plant\Base\Hin[3,4]</VariableName>
-      <Value>-0.000259598426169627</Value>
+      <Value>-0.000264843959740055</Value>
      </Z>
          </Position>
          <Orientation>
      <ZAxis>
       <X>
        <VariableName>YouBotModel\Plant\Base\Hin[1,3]</VariableName>
-       <Value>-1.18987883159186e-005</Value>
+       <Value>-1.47400700736341e-005</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\Base\Hin[2,3]</VariableName>
-       <Value>4.52627748472748e-006</Value>
+       <Value>-2.19153931352855e-006</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\Base\Hin[3,3]</VariableName>
-       <Value>0.999999999918966</Value>
+       <Value>0.999999999888964</Value>
       </Z>
      </ZAxis>
      <YAxis>
       <X>
        <VariableName>YouBotModel\Plant\Base\Hin[1,2]</VariableName>
-       <Value>-0.00563740125680323</Value>
+       <Value>-0.203900911266553</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\Base\Hin[2,2]</VariableName>
-       <Value>0.999984109716735</Value>
+       <Value>0.978991531313693</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\Base\Hin[3,2]</VariableName>
-       <Value>-4.59328380547492e-006</Value>
+       <Value>-8.60015291756864e-007</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -20772,44 +20788,44 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLF0[1,4]</VariableName>
-      <Value>0.252242365873356</Value>
+      <Value>1.75956696786791</Value>
      </X>
      <Y>
       <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLF0[2,4]</VariableName>
-      <Value>0.155084183949128</Value>
+      <Value>1.85958288534582</Value>
      </Y>
      <Z>
       <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLF0[3,4]</VariableName>
-      <Value>0.0497425027516669</Value>
+      <Value>0.0497385231886639</Value>
      </Z>
          </Position>
          <Orientation>
      <ZAxis>
       <X>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLF0[1,3]</VariableName>
-       <Value>0.00563738999403979</Value>
+       <Value>0.203900834878154</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLF0[2,3]</VariableName>
-       <Value>-0.999983789049213</Value>
+       <Value>-0.978991222651826</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLF0[3,3]</VariableName>
-       <Value>0.000800919993018064</Value>
+       <Value>0.000797186725664132</Value>
       </Z>
      </ZAxis>
      <YAxis>
       <X>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLF0[1,2]</VariableName>
-       <Value>0.128667022931782</Value>
+       <Value>-0.435454735689481</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLF0[2,2]</VariableName>
-       <Value>0.00151963251786668</Value>
+       <Value>-0.0899656083858278</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLF0[3,2]</VariableName>
-       <Value>0.991686688388466</Value>
+       <Value>0.89570383636187</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -20888,44 +20904,44 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRF0[1,4]</VariableName>
-      <Value>0.253933586250397</Value>
+      <Value>1.82073724124788</Value>
      </X>
      <Y>
       <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRF0[2,4]</VariableName>
-      <Value>-0.144911048965895</Value>
+      <Value>1.56588542595171</Value>
      </Y>
      <Z>
       <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRF0[3,4]</VariableName>
-      <Value>0.0497438807368086</Value>
+      <Value>0.0497387811932514</Value>
      </Z>
          </Position>
          <Orientation>
      <ZAxis>
       <X>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRF0[1,3]</VariableName>
-       <Value>0.00563738999403979</Value>
+       <Value>0.203900834878154</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRF0[2,3]</VariableName>
-       <Value>-0.999983789049213</Value>
+       <Value>-0.978991222651826</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRF0[3,3]</VariableName>
-       <Value>0.000800919993018064</Value>
+       <Value>0.000797186725664132</Value>
       </Z>
      </ZAxis>
      <YAxis>
       <X>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRF0[1,2]</VariableName>
-       <Value>0.248171915193463</Value>
+       <Value>-0.173591038805724</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRF0[2,2]</VariableName>
-       <Value>0.00217493919070369</Value>
+       <Value>-0.036956295039294</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRF0[3,2]</VariableName>
-       <Value>0.968713564552869</Value>
+       <Value>-0.984124170774866</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -21004,44 +21020,44 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLR0[1,4]</VariableName>
-      <Value>-0.217750165665193</Value>
+      <Value>1.29944094820245</Value>
      </X>
      <Y>
       <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLR0[2,4]</VariableName>
-      <Value>0.152434605332957</Value>
+      <Value>1.76374945705522</Value>
      </Y>
      <Z>
       <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLR0[3,4]</VariableName>
-      <Value>0.0497369224027517</Value>
+      <Value>0.0497315308761649</Value>
      </Z>
          </Position>
          <Orientation>
      <ZAxis>
       <X>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLR0[1,3]</VariableName>
-       <Value>0.00563738999403979</Value>
+       <Value>0.203900834878154</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLR0[2,3]</VariableName>
-       <Value>-0.999983789049213</Value>
+       <Value>-0.978991222651826</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLR0[3,3]</VariableName>
-       <Value>0.000800919993018064</Value>
+       <Value>0.000797186725664132</Value>
       </Z>
      </ZAxis>
      <YAxis>
       <X>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLR0[1,2]</VariableName>
-       <Value>0.203665629113808</Value>
+       <Value>0.975480867391951</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLR0[2,2]</VariableName>
-       <Value>0.00193230549182765</Value>
+       <Value>0.203100676820663</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HLR0[3,2]</VariableName>
-       <Value>0.979038598684017</Value>
+       <Value>-0.0847773108044544</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -21120,44 +21136,44 @@ Potential field ' 408 80 18 bold;
          <Position>
      <X>
       <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRR0[1,4]</VariableName>
-      <Value>-0.216058945288152</Value>
+      <Value>1.36061122158241</Value>
      </X>
      <Y>
       <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRR0[2,4]</VariableName>
-      <Value>-0.147560627582066</Value>
+      <Value>1.47005199766111</Value>
      </Y>
      <Z>
       <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRR0[3,4]</VariableName>
-      <Value>0.0497383003878933</Value>
+      <Value>0.0497317888807524</Value>
      </Z>
          </Position>
          <Orientation>
      <ZAxis>
       <X>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRR0[1,3]</VariableName>
-       <Value>0.00563738999403979</Value>
+       <Value>0.203900834878154</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRR0[2,3]</VariableName>
-       <Value>-0.999983789049213</Value>
+       <Value>-0.978991222651826</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRR0[3,3]</VariableName>
-       <Value>0.000800919993018064</Value>
+       <Value>0.000797186725664132</Value>
       </Z>
      </ZAxis>
      <YAxis>
       <X>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRR0[1,2]</VariableName>
-       <Value>0.173829289771388</Value>
+       <Value>0.91365634173891</Value>
       </X>
       <Y>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRR0[2,2]</VariableName>
-       <Value>0.00176869752654616</Value>
+       <Value>0.190585480205617</Value>
       </Y>
       <Z>
        <VariableName>YouBotModel\Plant\MecanumWheels\MecanumWheelAnimation\HRR0[3,2]</VariableName>
-       <Value>0.98477421256176</Value>
+       <Value>0.359039362654105</Value>
       </Z>
      </YAxis>
      <OrientationType>Matrix</OrientationType>
@@ -21190,11 +21206,11 @@ Potential field ' 408 80 18 bold;
        <Position>
         <X>
          <VariableName>YouBotModel\YouBot_OODL\Base_H[1,4]</VariableName>
-         <Value>0.0180923045712762</Value>
+         <Value>1.56008987547104</Value>
         </X>
         <Y>
          <VariableName>YouBotModel\YouBot_OODL\Base_H[2,4]</VariableName>
-         <Value>0.00376155196060644</Value>
+         <Value>1.66481754141052</Value>
         </Y>
         <Z>
          <VariableName>YouBotModel\YouBot_OODL\Base_H[3,4]</VariableName>
@@ -21219,11 +21235,11 @@ Potential field ' 408 80 18 bold;
         <YAxis>
          <X>
      <VariableName>YouBotModel\YouBot_OODL\Base_H[1,2]</VariableName>
-     <Value>-0.00563740156288149</Value>
+     <Value>-0.203900892217429</Value>
          </X>
          <Y>
      <VariableName>YouBotModel\YouBot_OODL\Base_H[2,2]</VariableName>
-     <Value>0.999984109725559</Value>
+     <Value>0.978991535281555</Value>
          </Y>
          <Z>
      <VariableName>YouBotModel\YouBot_OODL\Base_H[3,2]</VariableName>
@@ -21288,6 +21304,7 @@ Potential field ' 408 80 18 bold;
          </Childs>
          <FrontPlane>0.01</FrontPlane>
          <BackPlane>100</BackPlane>
+         <AutoFrontBack>true</AutoFrontBack>
          <Field>0.00392699081698724</Field>
          <Fieldy>45</Fieldy>
          <PlaneLeft>-10</PlaneLeft>
@@ -21298,11 +21315,11 @@ Potential field ' 408 80 18 bold;
          <LookatPosition>
      <X>
       <VariableName>YouBotKinematics\HToAngles\pose[2]</VariableName>
-      <Value>0.0180908699306083</Value>
+      <Value>0.797081651807713</Value>
      </X>
      <Y>
       <VariableName>YouBotKinematics\HToAngles\pose[3]</VariableName>
-      <Value>0.00375826898351069</Value>
+      <Value>0.814604518307089</Value>
      </Y>
          </LookatPosition>
          <UseAlwaysLookUp>true</UseAlwaysLookUp>
@@ -21762,7 +21779,7 @@ Potential field ' 408 80 18 bold;
      <XAxes>
       <Axis>
        <Minimum>0</Minimum>
-       <Maximum>7.4756</Maximum>
+       <Maximum>0.886700000000001</Maximum>
        <Linear>true</Linear>
        <Scaling>3</Scaling>
        <Label>time</Label>
@@ -21770,8 +21787,8 @@ Potential field ' 408 80 18 bold;
      </XAxes>
      <YAxes>
       <Axis>
-       <Minimum>-0.5</Minimum>
-       <Maximum>0.5</Maximum>
+       <Minimum>-250</Minimum>
+       <Maximum>250</Maximum>
        <Linear>true</Linear>
        <Scaling>1</Scaling>
        <Label>BasePoseController\DiscreteDifferential\output[1]</Label>
@@ -21982,18 +21999,18 @@ Potential field ' 408 80 18 bold;
      </StripChartPlots>
     </Plot>
    </Plots>
-   <WindowRectangles virtualDesktopWidth="1680" virtualDesktopHeight="1050">
-     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1050">
-0.174405 0.0495238 0.73631 0.92381
+   <WindowRectangles virtualDesktopWidth="1680" virtualDesktopHeight="1028">
+     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1028">
+0.17381 0.0486381 0.73631 0.94358
      </WindowRectangle>
-     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1050">
-0.0184524 0.0495238 0.492262 0.973333
+     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1028">
+0.0184524 0.0486381 0.492262 0.992218
      </WindowRectangle>
-     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1050">
-0.417262 0.0495238 0.991667 0.806667
+     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1028">
+0.416667 0.0486381 0.991667 0.82393
      </WindowRectangle>
-     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1050">
-0.454167 0.0495238 0.946429 0.926667
+     <WindowRectangle monitor="0" left="0" top="0" right="1680" bottom="1028">
+0.454167 0.0486381 0.946429 0.945525
      </WindowRectangle>
    </WindowRectangles>
   </PlotSpecs>
@@ -22007,6 +22024,7 @@ Potential field ' 408 80 18 bold;
     <EventEpsilon>1e-006</EventEpsilon>
     <AlgebraicTolerance>1e-007</AlgebraicTolerance>
     <SteadyStateAnalysis>false</SteadyStateAnalysis>
+    <UpdateHoldInstructions>false</UpdateHoldInstructions>
     <DiscreteSystems>
      <DiscreteSystem>
       <DiscreteID>SampleArmJonitsAngle\output</DiscreteID>
