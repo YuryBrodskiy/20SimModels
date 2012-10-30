@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document>
+ <Model version="4.1" build="4.1.4.1">
+    <Sidops>
+<![CDATA[model 128 184 description '<Description>
+   <Version>4.1</Version>
+<IsMainModel>0</IsMainModel>
+ <KeepParameterValues>False</KeepParameterValues>
+   <LibraryPath>Z:\Users\yury\workspaces\20SimModels\Devel\TwistIntegrator.emx</LibraryPath>
+  <TimeStamp>2012-10-30 12:08:19</TimeStamp>
+</Description>'; type Mainmodel end; implementation bg  submodels   Joystick2 240 128    description '<Description> <Version>4.0</Version> <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath> <TimeStamp>2007-10-31 11:32:54</TimeStamp> <IsMainModel>1</IsMainModel> <KeepParameterValues>False</KeepParameterValues> <AllowLibraryUpdate>True</AllowLibraryUpdate></Description>';    type Submodel     ports      signal out port1 [6,1];    end;    implementation eqequationsport1=[0;0;(sign(sin(time*2))-1);(sign(cos(time*2))-1);0;0];implementation_end;   TwistIntegrator 424 128    description '<Description>
+ <Version>4.0</Version>
+ <LibraryPath>C:\Program Files\20-sim 4.0\System\Submodel.emx</LibraryPath>
+ <TimeStamp>2007-10-31 11:32:54</TimeStamp>
+ <IsMainModel>1</IsMainModel>
+ <KeepParameterValues>False</KeepParameterValues>
+ <AllowLibraryUpdate>True</AllowLibraryUpdate>
+</Description>';    type Submodel     ports      signal in Twist [6,1];      signal out H0p [4,4];    end;    implementation eqvariables	real H[4,4];	real dotH[4,4];	real init[4,4];initialequations	H=eye(4);	init=eye(4);	dotH=0;equations	dotH=H*tilde(Twist);	H=H + dotH*sampletime;	H0p=H;implementation_end;  end;  connections   Joystick2\port1 -> TwistIntegrator\Twist;  end; implementation_end;]]>
+  </Sidops>
+</Model>
+</Document>
